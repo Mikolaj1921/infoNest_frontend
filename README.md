@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# infoNest Frontend
 
-## Getting Started
+## Overview
 
-First, run the development server:
+**infoNest** is a modern, scalable platform designed for organizing, managing, and collaborating on structured information such as documents, workspaces, and knowledge resources.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+This repository contains the **frontend layer** of the application, responsible for delivering the user interface, handling client-side logic, and communicating with the backend API.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Frontend Responsibilities
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The frontend is built as a modern web application and is responsible for:
 
-## Learn More
+### UI & UX
 
-To learn more about Next.js, take a look at the following resources:
+- Responsive and modern interface
+- Navigation and layout (sidebar, pages)
+- User-friendly experience
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Authentication
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Login and registration
+- Session handling
+- Protected routes (UI level)
 
-## Deploy on Vercel
+### Workspace & Content
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Displaying workspaces
+- Navigating categories and documents
+- Rendering structured content
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Document System
+
+- Creating and editing documents
+- Handling document state
+- Synchronization with backend
+
+### File Handling
+
+- Uploading files (via backend)
+- Displaying attachments
+- Managing file URLs
+
+### API Communication
+
+- Sending and fetching data (REST API)
+- Handling errors and loading states
+
+---
+
+## Architecture
+
+- **app/** – routing (Next.js)
+- **components/** – UI elements
+- **hooks/** – logic and state
+- **services/** – API communication
+- **store/** – global state
+- **lib/** – utilities
+
+---
+
+## Technology Stack
+
+- React.js
+- Next.js
+- Tailwind CSS
+- REST API
+
+---
+
+## Future Improvements
+
+- Admin panel
+
+---
+
+## 🇵🇱 Opis
+
+**infoNest** to nowoczesna, skalowalna platforma do organizowania, zarządzania oraz współdzielenia uporządkowanej wiedzy, takiej jak dokumenty, workspace’y i zasoby.
+
+Repozytorium zawiera **warstwę frontendową**, odpowiedzialną za interfejs użytkownika, logikę po stronie klienta oraz komunikację z backendem.
+
+---
+
+## Odpowiedzialności Frontendu
+
+Frontend odpowiada za:
+
+### UI i UX
+
+- Responsywny interfejs
+- Nawigację i layout
+- Przyjazne doświadczenie użytkownika
+
+### Autoryzacja
+
+- Logowanie i rejestracja
+- Zarządzanie sesją
+- Ochrona routów
+
+### Workspace i treść
+
+- Wyświetlanie workspace’ów
+- Kategorie i dokumenty
+- Renderowanie danych
+
+### Dokumenty
+
+- Tworzenie i edycja
+- Zarządzanie stanem
+- Synchronizacja z backendem
+
+### Pliki
+
+- Upload przez backend
+- Wyświetlanie plików
+- Obsługa URL
+
+### API
+
+- Komunikacja z backendem
+- Obsługa błędów
+
+---
+
+## Architektura
+
+- **app/** – routing
+- **components/** – UI
+- **hooks/** – logika
+- **services/** – API
+- **store/** – stan globalny
+- **lib/** – narzędzia
+
+---
+
+## Technologie
+
+- React.js
+- Next.js
+- Tailwind CSS
+- REST API
+
+---
+
+## Plany rozwoju
+
+- Panel admina
+
+---
+
+## License & Copyright
+
+© 2026 **Mikołaj Melnyk**
+
+---
+
+## Contact
+
+- https://mikolajmelnyk.pl/
+- https://www.linkedin.com/in/miko%C5%82aj-melnyk-634213335/
