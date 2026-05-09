@@ -1,34 +1,90 @@
 @import 'tailwindcss';
 
-@theme {
-  /*  темно-сірий фон */
-  --color-background: var(--slate-950);
-  --color-foreground: var(--slate-50);
+@custom-variant dark (&:is(.dark *));
 
-  /* кастомна палітра Slate - для Deep Dark Mode */
-  --color-slate-50: #f8fafc;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
+:root {
+  /* Deep Dark Mode - Slate 950 base with Indigo-600 accent */
+  --background: oklch(0.129 0.012 264.695); /* slate-950 */
+  --foreground: oklch(0.968 0.007 264.536); /* slate-100 */
+  --card: oklch(0.153 0.013 264.536); /* slate-900 */
+  --card-foreground: oklch(0.968 0.007 264.536); /* slate-100 */
+  --popover: oklch(0.153 0.013 264.536); /* slate-900 */
+  --popover-foreground: oklch(0.968 0.007 264.536); /* slate-100 */
+  --primary: oklch(0.546 0.245 262.881); /* indigo-600 */
+  --primary-foreground: oklch(0.985 0 0); /* white */
+  --secondary: oklch(0.208 0.014 264.436); /* slate-800 */
+  --secondary-foreground: oklch(0.968 0.007 264.536); /* slate-100 */
+  --muted: oklch(0.208 0.014 264.436); /* slate-800 */
+  --muted-foreground: oklch(0.704 0.018 261.147); /* slate-400 */
+  --accent: oklch(0.546 0.245 262.881); /* indigo-600 */
+  --accent-foreground: oklch(0.985 0 0); /* white */
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.208 0.014 264.436); /* slate-800 */
+  --input: oklch(0.208 0.014 264.436); /* slate-800 */
+  --ring: oklch(0.546 0.245 262.881); /* indigo-600 */
+  --chart-1: oklch(0.546 0.245 262.881);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.153 0.013 264.536);
+  --sidebar-foreground: oklch(0.968 0.007 264.536);
+  --sidebar-primary: oklch(0.546 0.245 262.881);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.208 0.014 264.436);
+  --sidebar-accent-foreground: oklch(0.968 0.007 264.536);
+  --sidebar-border: oklch(0.208 0.014 264.436);
+  --sidebar-ring: oklch(0.546 0.245 262.881);
+}
 
-  /* акцентний Indigo для кнопок та активних станів */
-  --color-brand: #4f46e5;
-  --color-brand-light: #818cf8;
-  --color-brand-dark: #3730a3;
-
-  /* Скруглення типу SaaS (Linear style) */
-  --radius-lg: 0.5rem;
-  --radius-md: calc(0.5rem - 2px);
-  --radius-sm: calc(0.5rem - 4px);
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
-  *,
-  ::after,
-  ::before {
-    @apply border-slate-800; /* Всі межі по дефолту приглушені */
+  * {
+    @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-slate-950 text-slate-50 antialiased;
+    @apply bg-background text-foreground;
   }
 }
