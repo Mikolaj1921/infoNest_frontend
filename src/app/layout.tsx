@@ -4,6 +4,8 @@ import './globals.css';
 import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 config.autoAddCss = false;
+// providers
+import QueryProvider from '@/providers/QueryProvider';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
@@ -19,7 +21,7 @@ export const metadata: Metadata = {
   },
 };
 
-// ua: базова структура
+// ua: базова структура (upd: з провайдером - обгортка всього додатку в QueryProvider)
 export default function RootLayout({
   children,
 }: {
@@ -27,7 +29,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="uk" className="dark">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }
