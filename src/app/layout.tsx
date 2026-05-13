@@ -6,6 +6,7 @@ import '@fortawesome/fontawesome-svg-core/styles.css';
 config.autoAddCss = false;
 // providers
 import QueryProvider from '@/providers/QueryProvider';
+import AuthProvider from '@/providers/AuthProvider';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
@@ -30,7 +31,9 @@ export default function RootLayout({
   return (
     <html lang="uk" className="dark">
       <body className={inter.className}>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

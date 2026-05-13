@@ -12,6 +12,11 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // ua: якщо 401, то просто відхиляємо проміс, щоб це можна було обробити в компонентах
+    //  (наприклад, для редіректу на логін)
+    if (error.response?.status === 401) {
+      return Promise.reject(error);
+    }
     // this will catch all errors from API calls and log them
     const message = error.response?.data?.message || 'Щось пішло не так';
     console.error('API Error:', message);

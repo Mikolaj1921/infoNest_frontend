@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: true, // ua: true, поки перевіряється куки при першому старті
 
-  // сетери
+  // сетери (action - функція для оновлення стану)
 
   // ua: сетер користувача та статусу авторизації
   setAuth: (user) =>
