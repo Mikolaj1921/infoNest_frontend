@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, expectTypeOf } from 'vitest';
 // Import zustand store and types
 import { useAuthStore } from '@/store/useAuthStore';
 import { User } from '@/types/user';
@@ -43,5 +43,21 @@ describe('Zustand Auth Store (Global Test Folder)', () => {
     expect(state.user).toBeNull();
     expect(state.isAuthenticated).toBe(false);
     expect(state.isLoading).toBe(false);
+  });
+
+  // ua: тестування types - validation of types
+  test('The types should be correctly validated - password and refreshToken', () => {
+    //  ua: check що тип користувача в сторі точно відповідає нашому інтерфейсу User
+    const state = useAuthStore.getState();
+    expectTypeOf(state.user).toMatchTypeOf<User | null>();
+
+    // ua: перевірка на відсутність чутливих полів з Prisma-схеми бекенду
+    expectTypeOf<User>().not.toHaveProperty('password');
+    expectTypeOf<User>().not.toHaveProperty('refreshToken');
+
+    // ua: перевірка наявності лише обовязкових публічних полів
+    expectTypeOf<User>().toHaveProperty('id');
+    expectTypeOf<User>().toHaveProperty('email');
+    expectTypeOf<User>().toHaveProperty('name');
   });
 });
