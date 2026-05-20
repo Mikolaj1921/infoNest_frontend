@@ -6,13 +6,15 @@ import axios, {
 // auth store - для можливості виклику clearAuth при 401 - без реакт хуків
 import { useAuthStore } from '@/store/useAuthStore';
 
+// ua: Типізуємо чергу: resolve тепер приймає результат повторного запиту api()
 interface FailedRequest {
-  resolve: (token: string | null) => void;
+  resolve: (value: unknown) => void; // ua: resolve тепер приймає результат повторного запиту api()
   reject: (err: AxiosError) => void;
 }
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  // ua: додаємо захист на випадок, якщо змінна чомусь пуста
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -23,22 +25,14 @@ const api = axios.create({
 let isRefreshing = false;
 let failedRequestsQueue: FailedRequest[] = [];
 
-// -- fix
-// ua: поправляє проблему з одночасними 401 помилками
-// (Тепер, якщо isRefreshing === true, запити №2 та №3 не відхиляються.
-// Вони заморожуються всередині нового Promise і чекають у масиві.)
-
-// ua: коли процес рефрешу завершено, ми проходимо по черзі
-// failedRequestsQueue і виконуємо resolve або reject для кожного запиту
-const processQueue = (
-  error: AxiosError | null,
-  token: string | null = null,
-) => {
+// ua: коли процес рефрешу завершено, ми запускаємо або скасовуємо всі заморожені запити
+const processQueue = (error: AxiosError | null) => {
   failedRequestsQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      // ua: викликаємо без аргументів, бо стрілочна функція сама знає свій originalRequest
+      prom.resolve(null);
     }
   });
   failedRequestsQueue = [];
@@ -63,11 +57,11 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // ua: якщо вже йде процес рефрешу, то не запускаємо його знову,
-      // а просто відхиляємо проміс (додано: ставимо в чергу очікування)
+      // ua: якщо вже йде процес рефрешу, заморожуємо запит і чекаємо
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedRequestsQueue.push({
+            // ФІКС: resolve повертає новий виклик api(), щоб компонент отримав дані, а не undefined
             resolve: () => resolve(api(originalRequest)),
             reject: (err: AxiosError) => reject(err),
           });
@@ -84,12 +78,12 @@ api.interceptors.response.use(
           { withCredentials: true },
         );
         isRefreshing = false;
-        processQueue(null);
-        return api(originalRequest);
+        processQueue(null); // Виконуємо чергу
+        return api(originalRequest); // Виконуємо поточний запит
       } catch (refreshError) {
         isRefreshing = false;
         const axiosRefreshError = refreshError as AxiosError;
-        processQueue(axiosRefreshError, null);
+        processQueue(axiosRefreshError); // Відхиляємо всю чергу
         clearAuth();
         return Promise.reject(refreshError);
       }
@@ -97,7 +91,7 @@ api.interceptors.response.use(
 
     // this will catch all errors from API calls and log them
     const data = error.response?.data as { message?: string } | undefined;
-    const message = data?.message || 'Щось пішло не так';
+    const message = data?.message || 'Something went wrong';
     console.error('API Error:', message);
     return Promise.reject(error);
   },

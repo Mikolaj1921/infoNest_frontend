@@ -4,8 +4,8 @@
 
 import { useEffect } from 'react';
 import axios from 'axios'; // ua: для перевірки типу помилки в catch
-// ua: useAuthStore - zustand стор для управління станом авторизації - custom hook
-import { useAuthStore } from '@/store/useAuthStore';
+
+import { useAuthActions, useIsAuthLoading } from '@/store/useAuthStore';
 // ua: authService - сервіс для роботи з API авторизації
 import { authService } from '@/services/auth.service';
 // components
@@ -18,8 +18,10 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // ua: отримання сетерa та статус завантаження з Zustand
-  const { setAuth, clearAuth, isLoading } = useAuthStore();
+  // useAuthActions - хук для отримання екшенів авторизації
+  const { setAuth, clearAuth } = useAuthActions();
+  // useIsAuthLoading - хук для отримання статусу завантаження авторизації
+  const isLoading = useIsAuthLoading();
 
   // ua: при першому завантаженні перевіряємо куки та оновлюємо стан авторизації
   useEffect(() => {
