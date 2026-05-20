@@ -7,7 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 // services
 import { authService } from '@/services/auth.service';
 // zustand store
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthActions } from '@/store/useAuthStore';
 // features context - custom hooks
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 // ui components
@@ -22,7 +22,11 @@ import { LoginInput } from '@/validators/auth.schema';
 export default function LoginPage() {
   const router = useRouter();
   // function for update global state auth
-  const { setAuth } = useAuthStore();
+  // ua: погано по оптимізації рендерингу
+  //const { setAuth } = useAuthStore();
+
+  // custom hook - для кращого масштабування
+  const { setAuth } = useAuthActions();
 
   // ua: ініціалізація існуючої оболонки форми
   const {
