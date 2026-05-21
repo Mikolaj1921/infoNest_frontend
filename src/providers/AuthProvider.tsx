@@ -3,9 +3,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import axios from 'axios'; // ua: для перевірки типу помилки в catch
 
-import { useAuthActions, useIsAuthLoading } from '@/store/useAuthStore';
+import {
+  useAuthActions,
+  useIsAuthLoading,
+  useIsAuthenticated,
+} from '@/store/useAuthStore';
 // ua: authService - сервіс для роботи з API авторизації
 import { authService } from '@/services/auth.service';
 // components
@@ -18,10 +23,15 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const pathname = usePathname(); // ua: поточний шлях
+
   // useAuthActions - хук для отримання екшенів авторизації
   const { setAuth, clearAuth } = useAuthActions();
   // useIsAuthLoading - хук для отримання статусу завантаження авторизації
   const isLoading = useIsAuthLoading();
+  // useIsAuthenticated - хук для отримання статусу авторизації
+  const isAuthenticated = useIsAuthenticated();
 
   // ua: при першому завантаженні перевіряємо куки та оновлюємо стан авторизації
   useEffect(() => {
@@ -51,6 +61,19 @@ export default function AuthProvider({
 
     checkSession();
   }, [setAuth, clearAuth]);
+
+  // ua: check чи авторизований юзер + перенаправка на /workspaces
+  useEffect(() => {
+    if (!isLoading) return;
+
+    // ua: список публічних сторінок авторизації
+    const isAuthPage = pathname === '/login' || pathname === '/register';
+
+    // ua: якщо юзер авторизований і пробує зайти на /login або /register
+    if (isAuthenticated && isAuthPage) {
+      router.replace('/workspaces'); // ua: перенаправка в воркспейси
+    }
+  }, [isAuthenticated, isLoading, pathname, router]);
 
   // ua: Блокуємо інтерфейс лоадером, поки триває перевірка куків
   if (isLoading) {
