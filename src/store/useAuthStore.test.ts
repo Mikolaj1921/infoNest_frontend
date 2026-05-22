@@ -1,61 +1,59 @@
-import { describe, test, expect, expectTypeOf } from 'vitest';
-// Import zustand store and types
-import { useAuthStore } from '@/store/useAuthStore';
+// ua: готові ai тести для useAuthStore
+import { describe, test, expect } from 'vitest';
+import { useAuthStore } from './useAuthStore';
 import { User } from '@/types/user';
+import { expectTypeOf } from 'vitest';
 
-// ua: mock дані користувача для тестування
 const mockUser: User = {
   id: 'cuid-12345',
-  name: 'Mikołaj Test',
+  name: 'Mikołaj Testowy',
   email: 'mikolaj@nest.pl',
   createdAt: '2026-05-14T20:00:00.000Z',
   updatedAt: '2026-05-14T20:00:00.000Z',
 };
 
-// ua: тестування zustand store для авторизації
-describe('Zustand Auth Store (Global Test Folder)', () => {
-  // ua: тестування початкового стану
-  test('The initial state should be correct', () => {
+describe('Zustand Auth Store (Colocated Test)', () => {
+  test('1. Початковий стан має бути за замовчуванням правильним', () => {
     const state = useAuthStore.getState();
     expect(state.user).toBeNull();
     expect(state.isAuthenticated).toBe(false);
     expect(state.isLoading).toBe(true);
   });
 
-  // ua: тестування методу setAuth
-  test('The setAuth method should correctly set the user', () => {
-    useAuthStore.getState().setAuth(mockUser);
+  test('2. Метод setAuth має коректно записувати користувача', () => {
+    // ua: виклик метод через об'єкт actions згідно з оновленням
+    useAuthStore.getState().actions.setAuth(mockUser);
+
     const state = useAuthStore.getState();
     expect(state.user).toEqual(mockUser);
     expect(state.isAuthenticated).toBe(true);
     expect(state.isLoading).toBe(false);
   });
 
-  // ua: тестування методу clearAuth
-  test('The clearAuth method should fully clear the state', () => {
+  test('3. Метод clearAuth має повністю очищувати стан', () => {
+    // ua: штучно ініціалізуємо стан авторизованого користувача
     useAuthStore.setState({
       user: mockUser,
       isAuthenticated: true,
       isLoading: false,
     });
-    useAuthStore.getState().clearAuth();
+
+    // ua: викликаємо логаут через об'єкт actions
+    useAuthStore.getState().actions.clearAuth();
+
     const state = useAuthStore.getState();
     expect(state.user).toBeNull();
     expect(state.isAuthenticated).toBe(false);
     expect(state.isLoading).toBe(false);
   });
 
-  // ua: тестування types - validation of types
-  test('The types should be correctly validated - password and refreshToken', () => {
-    //  ua: check що тип користувача в сторі точно відповідає нашому інтерфейсу User
+  test("4. Валідація типів: об'єкт User має бути безпечним і не містити паролів", () => {
     const state = useAuthStore.getState();
     expectTypeOf(state.user).toMatchTypeOf<User | null>();
 
-    // ua: перевірка на відсутність чутливих полів з Prisma-схеми бекенду
     expectTypeOf<User>().not.toHaveProperty('password');
     expectTypeOf<User>().not.toHaveProperty('refreshToken');
 
-    // ua: перевірка наявності лише обовязкових публічних полів
     expectTypeOf<User>().toHaveProperty('id');
     expectTypeOf<User>().toHaveProperty('email');
     expectTypeOf<User>().toHaveProperty('name');
