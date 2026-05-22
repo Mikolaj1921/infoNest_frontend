@@ -62,16 +62,23 @@ export default function AuthProvider({
     checkSession();
   }, [setAuth, clearAuth]);
 
-  // ua: check чи авторизований юзер + перенаправка на /workspaces
+  // ua: check чи авторизований юзер + перенаправка на /workspaces | /login
   useEffect(() => {
     if (!isLoading) return;
 
     // ua: список публічних сторінок авторизації
     const isAuthPage = pathname === '/login' || pathname === '/register';
+    const isPrivatePage =
+      pathname.startsWith('/workspaces') || pathname.startsWith('/profile');
 
     // ua: якщо юзер авторизований і пробує зайти на /login або /register
     if (isAuthenticated && isAuthPage) {
       router.replace('/workspaces'); // ua: перенаправка в воркспейси
+    }
+
+    // ua: якщо юзер не авторизований і пробує зайти на приватну сторінку
+    if (!isAuthenticated && isPrivatePage) {
+      router.replace('/login');
     }
   }, [isAuthenticated, isLoading, pathname, router]);
 
