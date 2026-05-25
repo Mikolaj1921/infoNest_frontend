@@ -13,7 +13,7 @@ export default function AuthLayout({
     <div className="relative flex min-h-screen flex-col bg-background selection:bg-primary/30">
       {/* gradient on background */}
       <div className="pointer-events-none absolute inset-0 flex justify-center overflow-hidden">
-        <div className="h-[530px] w-[600px] translate-y-2/3 rounded-full bg-primary/10 blur-[100px]" />
+        <div className="h-[530px] w-[600px] translate-y-2/5 rounded-full bg-primary/10 blur-[100px]" />
       </div>
 
       {/* header - logo */}
