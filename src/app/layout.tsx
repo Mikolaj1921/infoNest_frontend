@@ -7,6 +7,8 @@ config.autoAddCss = false;
 // providers
 import QueryProvider from '@/providers/QueryProvider';
 import AuthProvider from '@/providers/AuthProvider';
+// toaster
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
@@ -34,6 +36,19 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>
         </QueryProvider>
+        <Toaster
+          theme="dark"
+          position="bottom-right"
+          expand={false}
+          richColors
+          toastOptions={{
+            style: {
+              background: 'var(--card)',
+              borderColor: 'var(--border)',
+              color: 'var(--foreground)',
+            },
+          }}
+        />
       </body>
     </html>
   );
