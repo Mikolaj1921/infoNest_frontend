@@ -3,12 +3,12 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosResponse,
 } from 'axios';
-// auth store - для можливості виклику clearAuth при 401 - без реакт хуків
+// auth store - для можливості виклику clearAuth при 401 - bez react хуків
 import { useAuthStore } from '@/store/useAuthStore';
 
-// ua: Типізуємо чергу: resolve тепер приймає результат повторного запиту api()
+// ua: Типізуємо чергу: resolve  приймає результат повторного запиту api()
 interface FailedRequest {
-  resolve: (value: unknown) => void; // ua: resolve тепер приймає результат повторного запиту api()
+  resolve: (value: unknown) => void;
   reject: (err: AxiosError) => void;
 }
 
@@ -31,7 +31,6 @@ const processQueue = (error: AxiosError | null) => {
     if (error) {
       prom.reject(error);
     } else {
-      // ua: викликаємо без аргументів, бо стрілочна функція сама знає свій originalRequest
       prom.resolve(null);
     }
   });
@@ -52,8 +51,18 @@ api.interceptors.response.use(
     if (!originalRequest) return Promise.reject(error);
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // ua: якщо це запит профілю, відразу розлогінюємо без рефрешу
       if (originalRequest.url === '/auth/me') {
         clearAuth();
+        return Promise.reject(error);
+      }
+
+      // ua: Якщо 401 повернув запит логіну або реєстрації — це звичайна помилка валідації полів.
+      // Ми просто відхиляємо проміс далі, повністю блокуючи запуск механізму оновлення токенів.
+      if (
+        originalRequest.url === '/auth/login' ||
+        originalRequest.url === '/auth/register'
+      ) {
         return Promise.reject(error);
       }
 
@@ -61,7 +70,7 @@ api.interceptors.response.use(
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedRequestsQueue.push({
-            // ФІКС: resolve повертає новий виклик api(), щоб компонент отримав дані, а не undefined
+            // ФІКС: resolve повертає новий виклик api(), щоб компонент отримав дані, а ne undefined
             resolve: () => resolve(api(originalRequest)),
             reject: (err: AxiosError) => reject(err),
           });
