@@ -40,12 +40,15 @@ export const Sidebar = () => {
   // ua: навігаційна функція для визначення активного лінку
   const isActive = (path: string) => pathname === path;
 
+  // ua: функція для перевірки, чи поточний шлях починається з певного підмаршруту (наприклад, для документів)
+  const isChildActive = (path: string) => pathname.startsWith(path);
+
   // ua: функція для закриття мобільного меню після кліку
   const closeMenu = () => setIsOpen(false);
 
   return (
     <>
-      {/* мобайл вю */}
+      {/* mobile menu toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-3 left-4 z-50 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background/80 text-foreground backdrop-blur-md hover:bg-accent md:hidden cursor-pointer transition-colors"
@@ -54,7 +57,6 @@ export const Sidebar = () => {
         <FontAwesomeIcon icon={isOpen ? faXmark : faBars} className="h-4 w-4" />
       </button>
 
-      {/* плавний задній фон для мобільної версії */}
       <div
         onClick={closeMenu}
         className={`fixed inset-0 z-40 bg-background/60 backdrop-blur-sm md:hidden transition-opacity duration-300 ${
@@ -73,7 +75,7 @@ export const Sidebar = () => {
       >
         {/*  Workspace Switcher */}
         <div className="p-4 border-b border-border/40 flex items-center h-16 md:h-auto pl-16 md:pl-4">
-          <button className="flex w-full items-center justify-between rounded-lg border border-border bg-background/50 p-2 text-sm font-semibold hover:bg-accent/10 transition-colors cursor-pointer group">
+          <button className="flex w-full items-center justify-between rounded-lg border border-border bg-background/50 p-2 text-sm font-semibold hover:bg-accent/10 transition-colors cursor-pointer group w-full">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[10px] text-primary-foreground font-bold">
                 IN
@@ -122,22 +124,38 @@ export const Sidebar = () => {
             Struktura
           </div>
 
-          {/* Приклад категорії (Folder) */}
+          {/* (Folder) */}
           <div className="space-y-1">
-            <button className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer w-full text-left">
+            <Link
+              href="/workspaces/info-nest/projects"
+              onClick={closeMenu}
+              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                isActive('/workspaces/info-nest/projects')
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              }`}
+            >
               <FontAwesomeIcon
                 icon={faFolder}
                 className="h-3.5 w-3.5 text-primary/70"
               />
               <span>Projekty</span>
-            </button>
+            </Link>
 
-            {/* Приклад документа всередині (File) */}
+            {/* (File) */}
             <div className="ml-4 border-l border-border pl-2 space-y-1">
-              <button className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-primary bg-primary/10 cursor-pointer text-left w-full">
+              <Link
+                href="/workspaces/info-nest/documents/plan-mvp"
+                onClick={closeMenu}
+                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isChildActive('/workspaces/info-nest/documents/plan-mvp')
+                    ? 'bg-primary/10 text-primary font-semibold'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                }`}
+              >
                 <FontAwesomeIcon icon={faFileLines} className="h-3.5 w-3.5" />
                 <span className="truncate">Plan MVP</span>
-              </button>
+              </Link>
             </div>
           </div>
         </nav>
