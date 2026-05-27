@@ -9,6 +9,8 @@ import QueryProvider from '@/providers/QueryProvider';
 import AuthProvider from '@/providers/AuthProvider';
 // toaster
 import { Toaster } from 'sonner';
+// ua: індикатор завантаження сторінок при навігації
+import NextTopLoader from 'nextjs-toploader';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
@@ -33,6 +35,16 @@ export default function RootLayout({
   return (
     <html lang="uk" className="dark">
       <body className={inter.className}>
+        <NextTopLoader
+          color="var(--primary)"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={2}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+        />
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>
         </QueryProvider>

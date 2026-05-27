@@ -74,6 +74,7 @@ export default function AuthProvider({
     // ua: якщо юзер авторизований і пробує зайти на /login або /register
     if (isAuthenticated && isAuthPage) {
       router.replace('/workspaces'); // ua: перенаправка в воркспейси
+      return;
     }
 
     // ua: якщо юзер не авторизований і пробує зайти на приватну сторінку
