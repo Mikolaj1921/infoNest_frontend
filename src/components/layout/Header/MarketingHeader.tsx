@@ -40,7 +40,7 @@ export const MarketingHeader = () => {
           </Link>
           <Link
             href="/register"
-            className="rounded-lg px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand/20 transition-all  hover:scale-105 active:scale-95"
+            className="text-sm font-semibold text-slate-200 hover:text-white px-4 py-2"
           >
             Sign Up Free
           </Link>

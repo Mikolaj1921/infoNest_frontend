@@ -39,12 +39,12 @@ export const HeroSection = () => {
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row mb-6">
           <Link
             href="/register"
-            className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-sm font-bold text-primary-foreground transition-all hover:opacity-90 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(37,99,235,0.2)]"
+            className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-sm font-bold text-primary-foreground transition-all hover:opacity-90 hover:bg-primary/70 duration-300 shadow-[0_0_20px_rgba(37,99,235,0.2)]"
           >
             Get Started Free
             <FontAwesomeIcon icon={faArrowRight} className="ml-1 w-3.5 h-3.5" />
           </Link>
-          <button className="flex h-12 items-center justify-center rounded-lg bg-secondary border border-border px-8 text-sm font-bold text-secondary-foreground transition-all hover:bg-accent">
+          <button className="flex h-12 items-center justify-center rounded-lg bg-secondary border border-border px-8 text-sm font-bold text-secondary-foreground transition-all hover:bg-accent duration-300">
             View Demo
           </button>
         </div>
@@ -86,7 +86,7 @@ const FeatureCard = ({
   description: string;
 }) => (
   <div className="rounded-2xl border border-border bg-card/40 p-8 backdrop-blur-sm transition-all hover:border-primary/30 hover:bg-card/60 group">
-    <div className="mb-4 text-primary group-hover:scale-110 transition-transform duration-300">
+    <div className="mb-4 text-primary transition-transform duration-300">
       <FontAwesomeIcon icon={icon} size="xl" />
     </div>
     <h3 className="mb-2 font-bold text-foreground">{title}</h3>

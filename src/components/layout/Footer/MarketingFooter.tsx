@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFolderOpen } from '@fortawesome/free-solid-svg-icons';
 
 export const MarketingFooter = () => {
   return (
@@ -7,7 +9,9 @@ export const MarketingFooter = () => {
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           {/* Logo & Copyright */}
           <div className="flex items-center gap-2 text-sm ">
-            <span className="text-lg">🪹</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+              <FontAwesomeIcon icon={faFolderOpen} className="h-4 w-4" />
+            </div>
             <span>
               &copy; {new Date().getFullYear()} infoNest. Build for
               productivity.
@@ -18,19 +22,19 @@ export const MarketingFooter = () => {
           <nav className="flex gap-8">
             <Link
               href="https://github.com"
-              className="text-sm text-slate-400 hover:text-slate-50 transition-colors"
+              className="text-sm text-slate-400 hover:text-slate-50 transition-colors duration-300"
             >
               GitHub
             </Link>
             <Link
               href="https://mikolajmelnyk.pl"
-              className="text-sm text-slate-400 hover:text-slate-50 transition-colors"
+              className="text-sm text-slate-400 hover:text-slate-50 transition-colors duration-300"
             >
               Portfolio
             </Link>
             <Link
               href="/privacy"
-              className="text-sm text-slate-400 hover:text-slate-50 transition-colors"
+              className="text-sm text-slate-400 hover:text-slate-50 transition-colors duration-300"
             >
               Privacy Policy
             </Link>
