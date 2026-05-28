@@ -16,6 +16,14 @@ export interface Workspace {
 
 // ua: інтерфейс для відповіді API при отриманні списку воркспейсів
 export interface WorkspacesResponse {
-  workspaces: Workspace[];
-  message: string;
+  success: boolean;
+  data: Workspace[]; // ua: масив у полі data
+}
+
+// ua: тип для створення одного воркспейсу
+export interface SingleWorkspaceResponse {
+  success: boolean;
+  data: {
+    workspace: Workspace;
+  };
 }
