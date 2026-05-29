@@ -1,4 +1,4 @@
-// ua: хук для отримання даних - workspaces користувача
+// ua: хук для отримання даних - workspaces користувача (with caching, error handling)
 
 import { useQuery } from '@tanstack/react-query';
 import { workspaceService } from '@/services/workspace.service';
