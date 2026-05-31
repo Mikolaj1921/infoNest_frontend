@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 // import icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
@@ -12,9 +14,15 @@ import { WorkspaceCard } from '@/features/workspaces/components/WorkspaceCard';
 import { WorkspacesSkeleton } from '@/features/workspaces/components/WorkspacesSkeleton';
 import { WorkspacesEmptyState } from '@/features/workspaces/components/WorkspacesEmptyState';
 
+// modal для створення нового воркспейсу
+import { CreateWorkspaceModal } from '@/features/workspaces/components/CreateWorkspaceModal';
+
 export default function WorkspacesPage() {
   // ua: отримання даних воркспейсів та стани завантаження/помилок через кастом-хук
   const { data: workspaces, isLoading } = useWorkspaces();
+
+  // ua: стан для керування відкриттям модалки створення воркспейсу
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // loading state
   if (isLoading) {
@@ -38,7 +46,10 @@ export default function WorkspacesPage() {
             Select a workspace to access your structured database
           </p>
         </div>
-        <button className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition-all cursor-pointer shrink-0">
+        <button
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition-all cursor-pointer shrink-0"
+          onClick={() => setIsCreateModalOpen(true)}
+        >
           <FontAwesomeIcon icon={faPlus} />
           <span>New Workspace</span>
         </button>
@@ -49,6 +60,10 @@ export default function WorkspacesPage() {
           <WorkspaceCard key={workspace.id} workspace={workspace} />
         ))}
       </div>
+      <CreateWorkspaceModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }

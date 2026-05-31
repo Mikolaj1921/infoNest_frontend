@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 // zustand store
 import { useAuthUser } from '@/store/useAuthStore';
+// workspace modal
+import { CreateWorkspaceModal } from '@/features/workspaces/components/CreateWorkspaceModal';
 
 // Імпорти іконок
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -19,6 +21,7 @@ import {
   faMagnifyingGlass,
   faBars,
   faXmark,
+  faPlus,
 } from '@fortawesome/free-solid-svg-icons';
 
 export const Sidebar = () => {
@@ -26,6 +29,9 @@ export const Sidebar = () => {
   const user = useAuthUser(); // ua: дані юзера з стору
   // ua: стан для мобільного сайдбару
   const [isOpen, setIsOpen] = useState(false);
+
+  // ua: стан для модалки створення воркспейсу
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // ua: ініціалізація аватару
   const getInitials = (nameString?: string) => {
@@ -120,8 +126,17 @@ export const Sidebar = () => {
 
         {/* Navigation Tree  */}
         <nav className="flex-1 overflow-y-auto px-2 py-4">
-          <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-            Struktura
+          <div className="mb-2 px-3 flex items-center justify-between group/title select-none">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+              Struktura
+            </span>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="h-4 w-4 rounded text-muted-foreground/40 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-all cursor-pointer  group-hover/title:opacity-100 focus:opacity-100"
+              title="Create new workspace"
+            >
+              <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
+            </button>
           </div>
 
           {/* (Folder) */}
@@ -190,6 +205,10 @@ export const Sidebar = () => {
           </div>
         </div>
       </aside>
+      <CreateWorkspaceModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </>
   );
 };
