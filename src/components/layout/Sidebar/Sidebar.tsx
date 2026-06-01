@@ -33,16 +33,6 @@ export const Sidebar = () => {
   // ua: стан для модалки створення воркспейсу
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // ua: ініціалізація аватару
-  const getInitials = (nameString?: string) => {
-    if (!nameString) return 'IN';
-    const parts = nameString.split(' ');
-    if (parts.length > 1) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return nameString.slice(0, 2).toUpperCase();
-  };
-
   // ua: навігаційна функція для визначення активного лінку
   const isActive = (path: string) => pathname === path;
 
@@ -211,4 +201,13 @@ export const Sidebar = () => {
       />
     </>
   );
+};
+// ua: ініціалізація аватару
+export const getInitials = (nameString?: string) => {
+  if (!nameString) return 'IN';
+  const parts = nameString.split(' ');
+  if (parts.length > 1) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return nameString.slice(0, 2).toUpperCase();
 };
