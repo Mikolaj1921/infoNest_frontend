@@ -4,18 +4,23 @@
 import { useState } from 'react';
 // ua: Імпорти навігації Next.js та Zustand-стору
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 // zustand store
 import { useAuthUser } from '@/store/useAuthStore';
 // workspace modal
 import { CreateWorkspaceModal } from '@/features/workspaces/components/CreateWorkspaceModal';
 
+// ua: custom hook для отримання структури воркспейсу (кат + док)
+import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
+// ua: для відображення станів завантаження та помилок
+import { SidebarSkeleton } from '@/components/ui/skeletons/SidebarSkeleton';
+// ua: для відображення дерева навігації по кат + док
+import { NavTree } from '@/features/documents/components/NavTree';
+
 // Імпорти іконок
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faChevronDown,
-  faFolder,
-  faFileLines,
   faGear,
   faHouse,
   faMagnifyingGlass,
@@ -26,19 +31,19 @@ import {
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const params = useParams(); // params route - get workspaceId
   const user = useAuthUser(); // ua: дані юзера з стору
+
+  const workspaceId = typeof params?.id === 'string' ? params.id : ''; // get workspaceId from route params
+  const { data: categories, isLoading } = useWorkspaceStructure(workspaceId); // state for workspace structure
+
   // ua: стан для мобільного сайдбару
   const [isOpen, setIsOpen] = useState(false);
-
   // ua: стан для модалки створення воркспейсу
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // ua: навігаційна функція для визначення активного лінку
   const isActive = (path: string) => pathname === path;
-
-  // ua: функція для перевірки, чи поточний шлях починається з певного підмаршруту (наприклад, для документів)
-  const isChildActive = (path: string) => pathname.startsWith(path);
-
   // ua: функція для закриття мобільного меню після кліку
   const closeMenu = () => setIsOpen(false);
 
@@ -118,7 +123,7 @@ export const Sidebar = () => {
         <nav className="flex-1 overflow-y-auto px-2 py-4">
           <div className="mb-2 px-3 flex items-center justify-between group/title select-none">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-              Struktura
+              Structure
             </span>
             <button
               onClick={() => setIsCreateModalOpen(true)}
@@ -129,40 +134,16 @@ export const Sidebar = () => {
             </button>
           </div>
 
-          {/* (Folder) */}
-          <div className="space-y-1">
-            <Link
-              href="/workspaces/info-nest/projects"
-              onClick={closeMenu}
-              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                isActive('/workspaces/info-nest/projects')
-                  ? 'bg-accent text-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              }`}
-            >
-              <FontAwesomeIcon
-                icon={faFolder}
-                className="h-3.5 w-3.5 text-primary/70"
-              />
-              <span>Projekty</span>
-            </Link>
-
-            {/* (File) */}
-            <div className="ml-4 border-l border-border pl-2 space-y-1">
-              <Link
-                href="/workspaces/info-nest/documents/plan-mvp"
-                onClick={closeMenu}
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  isChildActive('/workspaces/info-nest/documents/plan-mvp')
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                }`}
-              >
-                <FontAwesomeIcon icon={faFileLines} className="h-3.5 w-3.5" />
-                <span className="truncate">Plan MVP</span>
-              </Link>
+          {/* ua: відображення дерева документів/скелетонів завантаження*/}
+          {isLoading ? (
+            <SidebarSkeleton />
+          ) : categories && categories.length > 0 ? (
+            <NavTree categories={categories} />
+          ) : (
+            <div className="px-3 py-2 text-xs text-muted-foreground/30 italic text-left select-none">
+              No categories found
             </div>
-          </div>
+          )}
         </nav>
 
         {/*  User & Settings Footer */}
@@ -177,7 +158,7 @@ export const Sidebar = () => {
             }`}
           >
             <FontAwesomeIcon icon={faGear} className="h-4 w-4" />
-            <span>Ustawienia</span>
+            <span>Settings</span>
           </Link>
 
           <div className="flex items-center gap-3 px-2 py-2 border border-border/50 bg-background/40 rounded-xl shadow-inner">
