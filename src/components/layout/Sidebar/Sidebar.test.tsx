@@ -13,15 +13,19 @@ import { User } from '@/types/user';
 // ua: макетування зовнішніх залежностей - Next.js та Zustand
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(),
+  useParams: vi.fn(() => ({ id: 'ws_test_1' })),
 }));
 
 vi.mock('@/store/useAuthStore', () => ({
   useAuthUser: vi.fn(),
 }));
 
-// ua: Ізолюємо Sidebar від логіки TanStack Query всередині модалки
 vi.mock('@/features/workspaces/components/CreateWorkspaceModal', () => ({
   CreateWorkspaceModal: () => <div data-testid="mock-modal" />,
+}));
+
+vi.mock('@/features/documents/hooks/useWorkspaceStructure', () => ({
+  useWorkspaceStructure: vi.fn(() => ({ data: [], isLoading: false })),
 }));
 
 // ua: фейк юзер для тестів
