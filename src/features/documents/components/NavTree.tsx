@@ -15,12 +15,32 @@ interface DocItemProps {
 }
 
 const DocItem = ({ doc }: DocItemProps) => {
+  // docId from url params to determine active document
+  const params = useParams();
+
+  // ua: визначення активного документа
+  const activeDocId = typeof params?.docId === 'string' ? params.docId : '';
+
+  // ua: перевірка, чи поточний документ є активним
+  const isActive = activeDocId === doc.id;
+
   return (
     <div className="ml-4 border-l border-border/40 pl-2 space-y-1">
-      <button className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer text-left group">
+      <button
+        className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors cursor-pointer text-left group 
+          ${
+            isActive
+              ? 'bg-accent text-foreground'
+              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+          }`}
+      >
         <FontAwesomeIcon
           icon={faFileLines}
-          className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:text-primary/80 transition-colors"
+          className={`h-3.5 w-3.5 transition-colors ${
+            isActive
+              ? 'text-primary'
+              : 'text-muted-foreground/60 group-hover:text-primary/80'
+          }`}
         />
         <span className="truncate">{doc.title}</span>
       </button>
