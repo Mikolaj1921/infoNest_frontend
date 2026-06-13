@@ -5,6 +5,9 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 
+// component
+import { Toolbar } from './Toolbar';
+
 export const Editor = () => {
   const editor = useEditor({
     // configuring the editor with extensions and initial content
@@ -31,6 +34,8 @@ export const Editor = () => {
   }
   return (
     <div className="w-full max-w-4xl mx-auto p-4 space-y-4 text-left">
+      <Toolbar editor={editor} />
+
       <div className="min-h-[400px] w-full rounded-2xl border border-border bg-card/20 p-6 backdrop-blur-md shadow-inner focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-300">
         <EditorContent
           editor={editor}
