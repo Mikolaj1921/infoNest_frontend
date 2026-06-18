@@ -2,7 +2,7 @@ import api from '@/lib/axios';
 
 //types
 import {
-  //WorkspaceDocument,
+  WorkspaceDocument,
   WorkspaceCategory,
   DocumentVisibility,
   WorkspaceStructureResponse,
@@ -24,6 +24,14 @@ export interface UpdateDocumentDTO {
   content?: string;
   categoryId?: string;
   visibility?: DocumentVisibility;
+}
+
+// dto для відповіді на запит отримання одного документа
+export interface SingleDocumentResponse {
+  success: boolean;
+  data: {
+    document: WorkspaceDocument;
+  };
 }
 
 // ua: сервіс для роботи з документами воркспейсу
@@ -50,5 +58,56 @@ export const documentService = {
     }
 
     return []; // ua: заглушка
+  },
+
+  // ua: отримання одного документа
+  getDocumentbyId: async (docId: string): Promise<WorkspaceDocument | null> => {
+    const { data } = await api.get<SingleDocumentResponse>(
+      `/documents/${docId}`,
+    );
+
+    // ua: перевірка
+    const res = data as SingleDocumentResponse | null;
+    if (
+      res &&
+      typeof res === 'object' &&
+      res.success === true &&
+      res.data &&
+      typeof res.data === 'object' &&
+      'document' in res.data
+    ) {
+      return res.data.document;
+    }
+
+    return null;
+  },
+
+  // manual update document
+  updateDocument: async (
+    docId: string,
+    dto: UpdateDocumentDTO,
+  ): Promise<WorkspaceDocument> => {
+    // get data
+    const { data } = await api.patch<SingleDocumentResponse>(
+      `/documents/${docId}`,
+      dto,
+    );
+
+    // ua: перевірка
+    const res = data as SingleDocumentResponse | null;
+    if (
+      res &&
+      typeof res === 'object' &&
+      res.success === true &&
+      res.data &&
+      typeof res.data === 'object' &&
+      'document' in res.data
+    ) {
+      return res.data.document;
+    }
+
+    throw new Error(
+      'Invalid response structure from server during document saving',
+    );
   },
 };
