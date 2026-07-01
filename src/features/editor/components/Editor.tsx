@@ -7,8 +7,16 @@ import Placeholder from '@tiptap/extension-placeholder';
 
 // component
 import { Toolbar } from './Toolbar';
+import { useRef, useEffect } from 'react';
 
-export const Editor = () => {
+interface EditorProps {
+  initialContent: string;
+  onContentChange: (htmlContent: string, isDirty: boolean) => void;
+}
+
+export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
+  const initialContentRef = useRef(initialContent);
+
   const editor = useEditor({
     // configuring the editor with extensions and initial content
 
@@ -25,9 +33,46 @@ export const Editor = () => {
         placeholder: 'Please start typing your text here...',
       }),
     ],
-    // ua: content for the editor
-    content: '<h1>First Heading</h1><p>Some initial content</p>',
+    // content for the editor
+    content: initialContent,
+    // onUpdate callback to handle content changes
+    onUpdate: ({ editor: currentEditor }) => {
+      const currentHTML = currentEditor.getHTML();
+      const isDirty = currentHTML !== initialContentRef.current;
+      onContentChange(currentHTML, isDirty);
+    },
   });
+
+  useEffect(() => {
+    if (!editor) return;
+
+    if (initialContent !== editor.getHTML()) {
+      initialContentRef.current = initialContent;
+      editor.commands.setContent(initialContent, { emitUpdate: false }); // full param (emitUpdate)
+    }
+  }, [initialContent, editor]);
+
+  useEffect(() => {
+    // попередження про незбережені зміни при закритті вкладки
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!editor) return;
+
+      const isDirty = editor.getHTML() !== initialContentRef.current;
+
+      if (isDirty) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+
+    // ua:  обробник події перед закриттям вікна
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // unmount cleanup
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [editor]);
 
   if (!editor) {
     return null;
