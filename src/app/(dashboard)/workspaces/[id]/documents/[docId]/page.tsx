@@ -2,8 +2,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Editor } from '@/features/editor/components/Editor';
+import { useDebounce } from '@/hooks/useDebounce';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCloudArrowUp,
@@ -12,14 +13,26 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function DocumentPage() {
+  const serverContentRef = useRef(
+    '<h1>New Document</h1><p>Start writing here...</p>',
+  );
+
   const [htmlContent, setHtmlContent] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+
+  const debouncedContent = useDebounce(htmlContent, 1500);
 
   // ua: колбек для отримання змін від компонента Editor
   const handleContentChange = (newHtml: string, currentIsDirty: boolean) => {
     setHtmlContent(newHtml);
     setIsDirty(currentIsDirty);
   };
+
+  useEffect(() => {
+    if (debouncedContent === serverContentRef.current) return;
+
+    console.log('Triggering Auto-save', debouncedContent);
+  }, [debouncedContent]);
 
   const handleSave = () => {
     console.log('Saving content to backend:', htmlContent);
