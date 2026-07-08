@@ -10,6 +10,7 @@ import {
   faCloudArrowUp,
   faCheckCircle,
   faCircleXmark,
+  faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function DocumentPage() {
@@ -19,6 +20,9 @@ export default function DocumentPage() {
 
   const [htmlContent, setHtmlContent] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'saved' | 'saving' | 'error'>(
+    'saved',
+  );
 
   const debouncedContent = useDebounce(htmlContent, 1500);
 
@@ -26,12 +30,22 @@ export default function DocumentPage() {
   const handleContentChange = (newHtml: string, currentIsDirty: boolean) => {
     setHtmlContent(newHtml);
     setIsDirty(currentIsDirty);
+
+    if (currentIsDirty && syncStatus === 'saved') {
+      setSyncStatus('saving');
+    }
   };
 
   useEffect(() => {
     if (debouncedContent === serverContentRef.current) return;
 
     console.log('Triggering Auto-save', debouncedContent);
+
+    const timer = setTimeout(() => {
+      setSyncStatus('saved');
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [debouncedContent]);
 
   const handleSave = () => {
@@ -46,19 +60,28 @@ export default function DocumentPage() {
             Document Editor
           </h1>
 
-          <div className="flex items-center gap-1.5 text-xs">
-            {isDirty ? (
-              <span className="flex items-center gap-1 text-amber-500 font-medium">
+          <div className="flex items-center gap-1.5 text-xs transition-all duration-300">
+            {syncStatus === 'saving' && (
+              <span className="flex items-center gap-1 text-primary font-medium animate-pulse">
                 <FontAwesomeIcon
-                  icon={faCircleXmark}
-                  className="h-3 w-3 animate-pulse"
+                  icon={faSpinner}
+                  className="h-3 w-3 animate-spin"
                 />
-                Unsaved changes
+                Saving to cloud...
               </span>
-            ) : (
-              <span className="flex items-center gap-1 text-emerald-500 font-medium">
+            )}
+
+            {syncStatus === 'saved' && (
+              <span className="flex items-center gap-1 text-emerald-500 font-medium transition-colors">
                 <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3" />
                 All changes saved
+              </span>
+            )}
+
+            {syncStatus === 'error' && (
+              <span className="flex items-center gap-1 text-destructive font-bold transition-colors">
+                <FontAwesomeIcon icon={faCircleXmark} className="h-3 w-3" />
+                Error syncing data
               </span>
             )}
           </div>
