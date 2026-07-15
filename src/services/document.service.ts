@@ -86,11 +86,13 @@ export const documentService = {
   updateDocument: async (
     docId: string,
     dto: UpdateDocumentDTO,
+    signal?: AbortSignal, // ua: параметр для сигналу скасування запиту
   ): Promise<WorkspaceDocument> => {
     // get data
     const { data } = await api.patch<SingleDocumentResponse>(
       `/documents/${docId}`,
       dto,
+      { signal },
     );
 
     // ua: перевірка

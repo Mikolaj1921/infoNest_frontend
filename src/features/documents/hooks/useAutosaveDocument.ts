@@ -20,9 +20,11 @@ export const useAutosaveDocument = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (dto: UpdateDocumentDTO) =>
-      documentService.updateDocument(docId, dto),
+    // ua: мутація для оновлення документа
+    mutationFn: (variables: { dto: UpdateDocumentDTO; signal?: AbortSignal }) =>
+      documentService.updateDocument(docId, variables.dto, variables.signal),
 
+    // ua: обробка успішного оновлення документа
     onSuccess: (updatedDoc) => {
       // ua: Оручне оновлення кешу конкретного документа
       queryClient.setQueryData(['document', docId], updatedDoc);
@@ -46,7 +48,10 @@ export const useAutosaveDocument = (
       }
     },
 
+    // ua: обробка помилок
     onError: (error) => {
+      if (error instanceof Error && error.name === 'CanceledError') return;
+
       if (options?.onErrorCb) {
         options.onErrorCb(error);
       }
