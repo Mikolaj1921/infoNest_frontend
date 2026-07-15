@@ -11,6 +11,7 @@ import {
   faCheckCircle,
   faCircleXmark,
   faSpinner,
+  faArrowRotateRight,
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function DocumentPage() {
@@ -79,10 +80,22 @@ export default function DocumentPage() {
             )}
 
             {syncStatus === 'error' && (
-              <span className="flex items-center gap-1 text-destructive font-bold transition-colors">
-                <FontAwesomeIcon icon={faCircleXmark} className="h-3 w-3" />
-                Error syncing data
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1 text-destructive font-bold transition-colors">
+                  <FontAwesomeIcon icon={faCircleXmark} className="h-3 w-3" />
+                  Error syncing data
+                </span>
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-1 rounded bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive hover:bg-destructive/20 cursor-pointer transition-colors"
+                >
+                  <FontAwesomeIcon
+                    icon={faArrowRotateRight}
+                    className="text-[9px]"
+                  />
+                  <span>Try manually</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
