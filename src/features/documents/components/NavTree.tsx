@@ -8,6 +8,7 @@ import {
   faFileLines,
   faFolderOpen,
   faChevronDown,
+  faEllipsisVertical,
 } from '@fortawesome/free-solid-svg-icons';
 
 // ua: компонент для відображення 1 doc
@@ -65,26 +66,40 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
   //const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="space-y-1 w-full">
-      {/* ua: кнопка папки */}
-      <button
-        onClick={onToggle}
-        className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer text-left group"
-      >
-        <FontAwesomeIcon
-          icon={isExpanded ? faFolderOpen : faFolder}
-          className={`h-3.5 w-3.5 transition-colors ${isExpanded ? 'text-primary' : 'text-primary/70'}`}
-        />
-        <span className="truncate font-medium">{category.name}</span>
+    <div className="space-y-1 w-full group/folder">
+      <div className="flex w-full items-center justify-between rounded-md pr-2 hover:bg-accent/50 transition-all duration-200 group">
+        {/* ua: кнопка папки */}
+        <button
+          onClick={onToggle}
+          className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer text-left group"
+        >
+          <FontAwesomeIcon
+            icon={isExpanded ? faFolderOpen : faFolder}
+            className={`h-3.5 w-3.5 transition-colors ${isExpanded ? 'text-primary' : 'text-primary/70'}`}
+          />
+          <span className="truncate font-medium">{category.name}</span>
 
-        {/* ua: стрілка що плавно обертається при змінах стану */}
-        <FontAwesomeIcon
-          icon={faChevronDown}
-          className={`ml-auto h-2.5 w-2.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-transform duration-200 ${
-            isExpanded ? 'rotate-180 text-foreground' : ''
-          }`}
-        />
-      </button>
+          {/* ua: стрілка що плавно обертається при змінах стану */}
+          <FontAwesomeIcon
+            icon={faChevronDown}
+            className={`ml-auto h-2.5 w-2.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-transform duration-200 ${
+              isExpanded ? 'rotate-180 text-foreground' : ''
+            }`}
+          />
+        </button>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation(); // ua: зупинка тригер клік папки, щоб вона не згорталася
+            console.log('Open actions menu for category:', category.id);
+          }}
+          className="opacity-0 group-hover/folder:opacity-100 h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
+          title="Folder actions"
+        >
+          <FontAwesomeIcon icon={faEllipsisVertical} className="h-3 w-3" />
+        </button>
+      </div>
 
       {/* ua: рендеринг вкладених документів при відкритій папці */}
       {isExpanded && (
