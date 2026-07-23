@@ -7,6 +7,7 @@ config.autoAddCss = false;
 // providers
 import QueryProvider from '@/providers/QueryProvider';
 import AuthProvider from '@/providers/AuthProvider';
+import { ModalProvider } from '@/providers/ModalProvider';
 // toaster
 import { Toaster } from 'sonner';
 // ua: індикатор завантаження сторінок при навігації
@@ -46,6 +47,7 @@ export default function RootLayout({
           speed={200}
         />
         <QueryProvider>
+          <ModalProvider />
           <AuthProvider>{children}</AuthProvider>
         </QueryProvider>
         <Toaster
