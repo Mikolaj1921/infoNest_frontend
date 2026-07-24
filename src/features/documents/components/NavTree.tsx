@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { WorkspaceDocument, WorkspaceCategory } from '@/types/document';
+
+// modal
+import { useModal } from '@/hooks/use-modal-store';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFolder,
@@ -65,6 +69,9 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
   // ua: локальний стан для керування відкриттям/закриттям актуальної папки
   //const [isExpanded, setIsExpanded] = useState(false);
 
+  // modal
+  const { onOpen } = useModal();
+
   return (
     <div className="space-y-1 w-full group/folder">
       <div className="flex w-full items-center justify-between rounded-md pr-2 hover:bg-accent/50 transition-all duration-200 group">
@@ -91,11 +98,14 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
         <button
           type="button"
           onClick={(e) => {
-            e.stopPropagation(); // ua: зупинка тригер клік папки, щоб вона не згорталася
-            console.log('Open actions menu for category:', category.id);
+            e.stopPropagation(); // ua: зупинка спливання події, щоб не викликати toggleFolder при кліку на кнопку
+            onOpen('deleteCategory', {
+              categoryId: category.id,
+              categoryName: category.name,
+            });
           }}
           className="opacity-0 group-hover/folder:opacity-100 h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
-          title="Folder actions"
+          title="Керування папкою"
         >
           <FontAwesomeIcon icon={faEllipsisVertical} className="h-3 w-3" />
         </button>

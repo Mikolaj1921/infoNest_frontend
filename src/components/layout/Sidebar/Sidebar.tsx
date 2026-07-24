@@ -10,6 +10,9 @@ import { useAuthUser } from '@/store/useAuthStore';
 // workspace modal
 import { CreateWorkspaceModal } from '@/features/workspaces/components/CreateWorkspaceModal';
 
+// ua: UI components
+import { useModal } from '@/hooks/use-modal-store';
+
 // ua: custom hook для отримання структури воркспейсу (кат + док)
 import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
 // ua: для відображення станів завантаження та помилок
@@ -41,6 +44,9 @@ export const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   // ua: стан для модалки створення воркспейсу
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // modal store
+  const { onOpen } = useModal();
 
   // ua: навігаційна функція для визначення активного лінку
   const isActive = (path: string) => pathname === path;
@@ -126,9 +132,9 @@ export const Sidebar = () => {
               Structure
             </span>
             <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="h-4 w-4 rounded text-muted-foreground/40 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-all cursor-pointer  group-hover/title:opacity-100 focus:opacity-100"
-              title="Create new workspace"
+              onClick={() => onOpen('createCategory')}
+              className="hover:bg-accent p-1 rounded-md transition cursor-pointer"
+              title="Create New Category"
             >
               <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
             </button>
