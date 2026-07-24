@@ -5,18 +5,25 @@
 // hooks
 import { useModal } from '@/hooks/use-modal-store';
 
+// ua: хук для мутацій категорій
+import { useDeleteCategory } from '@/features/documents/hooks/use-category-mutations';
+
 export const DeleteCategoryConfirmModal = () => {
   // states
   const { isOpen, onClose, type, data } = useModal();
   const isModalOpen = isOpen && type === 'deleteCategory';
   const { categoryName, categoryId } = data || {};
 
+  // hook
+  const { mutateAsync: deleteCategory, isPending } = useDeleteCategory(); // ua: виклик хук
+
   // ua: функція підтвердження видалення категорії
   const onConfirm = async () => {
     try {
-      console.log('Confirm cascade delete for category ID:', categoryId);
-      // ua: Виклик deleteCategory з TanStack Query додамо в Sub-task 4
-      onClose();
+      if (categoryId) {
+        await deleteCategory(categoryId); // ua:  каскадне видалення
+        onClose();
+      }
     } catch (error) {
       console.error(error);
     }
@@ -54,9 +61,10 @@ export const DeleteCategoryConfirmModal = () => {
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 cursor-pointer shadow-sm"
+            disabled={isPending}
+            className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 cursor-pointer shadow-sm disabled:opacity-50"
           >
-            Delete Permanently
+            {isPending ? 'Deleting...' : 'Delete Permanently'}
           </button>
         </div>
       </div>

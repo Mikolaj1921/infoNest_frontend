@@ -7,6 +7,9 @@ import * as z from 'zod';
 import { useModal } from '../../hooks/use-modal-store';
 import { useParams } from 'next/navigation';
 
+// mutation hook
+import { useCreateCategory } from '@/features/documents/hooks/use-category-mutations'; // ua: додано
+
 // validation schema
 const formSchema = z.object({
   name: z
@@ -21,7 +24,10 @@ type FormValues = z.infer<typeof formSchema>;
 export const CreateFolderModal = () => {
   const { isOpen, onClose, type } = useModal();
   const params = useParams();
+  // eslint-disable-next-line
   const workspaceId = typeof params?.id === 'string' ? params.id : '';
+
+  const { mutateAsync: createCategory, isPending } = useCreateCategory(); // ua: виклик хук
 
   const isModalOpen = isOpen && type === 'createCategory';
 
@@ -35,10 +41,10 @@ export const CreateFolderModal = () => {
     defaultValues: { name: '' },
   });
 
+  // for creating a new category
   const onSubmit = async (values: FormValues) => {
     try {
-      console.log('Submitting new category to workspace:', workspaceId, values);
-      // ua: Логіку мутації TanStack Query ми підключимо в наступній сабтасці
+      await createCategory({ name: values.name });
       reset();
       onClose();
     } catch (error) {
@@ -92,9 +98,10 @@ export const CreateFolderModal = () => {
             </button>
             <button
               type="submit"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm"
+              disabled={isPending}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm disabled:opacity-50"
             >
-              Create Category
+              {isPending ? 'Creating...' : 'Create'}
             </button>
           </div>
         </form>
