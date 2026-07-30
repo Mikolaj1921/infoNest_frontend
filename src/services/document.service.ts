@@ -34,6 +34,11 @@ export interface SingleDocumentResponse {
   };
 }
 
+export interface DocumentActionResponse {
+  success: boolean;
+  data: WorkspaceDocument;
+}
+
 // ua: сервіс для роботи з документами воркспейсу
 export const documentService = {
   // ua: отримання структури воркспейсу (категорії + документи)
@@ -111,5 +116,28 @@ export const documentService = {
     throw new Error(
       'Invalid response structure from server during document saving',
     );
+  },
+
+  // ua: створення нового документа в конкретній категорії
+  createDocument: async (
+    categoryId: string,
+    dto: CreateDocumentDTO,
+  ): Promise<WorkspaceDocument> => {
+    const { data } = await api.post<DocumentActionResponse>(
+      `/categories/${categoryId}/documents`,
+      dto,
+    );
+
+    const res = data as DocumentActionResponse | null;
+    if (res && typeof res === 'object' && res.success === true && res.data) {
+      return res.data;
+    }
+
+    throw new Error('Invalid response structure during document creation');
+  },
+
+  // ua: повне видалення конкретного документа за його id
+  deleteDocument: async (documentId: string): Promise<void> => {
+    await api.delete(`/documents/${documentId}`);
   },
 };
