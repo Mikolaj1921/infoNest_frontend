@@ -3,12 +3,21 @@
 import { create } from 'zustand';
 
 // ua: типи модальних вікон
-export type ModalType = 'createCategory' | 'deleteCategory';
+export type ModalType =
+  | 'createCategory'
+  | 'deleteCategory'
+  | 'createDocument'
+  | 'deleteDocument';
 
 // ua: інтерфейс даних
 interface ModalData {
-  categoryName?: string;
+  // Дані для категорій (папок)
   categoryId?: string;
+  categoryName?: string;
+
+  // Дані для документів
+  documentId?: string;
+  documentTitle?: string;
 }
 
 // ua: інтерфейс стану модального вікна

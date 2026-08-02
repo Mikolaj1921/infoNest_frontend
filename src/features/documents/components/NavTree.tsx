@@ -13,6 +13,7 @@ import {
   faFolderOpen,
   faChevronDown,
   faEllipsisVertical,
+  faPlus,
 } from '@fortawesome/free-solid-svg-icons';
 
 // ua: компонент для відображення 1 doc
@@ -95,20 +96,39 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
           />
         </button>
 
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation(); // ua: зупинка спливання події, щоб не викликати toggleFolder при кліку на кнопку
-            onOpen('deleteCategory', {
-              categoryId: category.id,
-              categoryName: category.name,
-            });
-          }}
-          className="opacity-0 group-hover/folder:opacity-100 h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
-          title="Керування папкою"
-        >
-          <FontAwesomeIcon icon={faEllipsisVertical} className="h-3 w-3" />
-        </button>
+        {/* блок дій папки при ховері */}
+        <div className="opacity-0 group-hover/folder:opacity-100 flex items-center gap-0.5 transition-all duration-150">
+          {/* кнопка + для створення документа всередині папки */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation(); // ua: запобігаємо закриттю папки
+              onOpen('createDocument', {
+                categoryId: category.id,
+                categoryName: category.name,
+              });
+            }}
+            className="h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
+            title="Створити документ у цій папці"
+          >
+            <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation(); // ua: зупинка спливання події, щоб не викликати toggleFolder при кліку на кнопку
+              onOpen('deleteCategory', {
+                categoryId: category.id,
+                categoryName: category.name,
+              });
+            }}
+            className="opacity-0 group-hover/folder:opacity-100 h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
+            title="Керування папкою"
+          >
+            <FontAwesomeIcon icon={faEllipsisVertical} className="h-3 w-3" />
+          </button>
+        </div>
       </div>
 
       {/* ua: рендеринг вкладених документів при відкритій папці */}
