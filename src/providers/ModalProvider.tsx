@@ -8,6 +8,8 @@
 import { useEffect, useState } from 'react';
 import { CreateFolderModal } from '@/components/modals/CreateFolderModal';
 import { DeleteCategoryConfirmModal } from '@/components/modals/DeleteCategoryConfirmModal';
+import { CreateDocumentModal } from '@/components/modals/CreateDocumentModal';
+import { DeleteDocumentConfirmModal } from '@/components/modals/DeleteDocumentConfirmModal';
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -31,6 +33,8 @@ export const ModalProvider = () => {
     <>
       <CreateFolderModal />
       <DeleteCategoryConfirmModal />
+      <CreateDocumentModal />
+      <DeleteDocumentConfirmModal />
     </>
   );
 };
