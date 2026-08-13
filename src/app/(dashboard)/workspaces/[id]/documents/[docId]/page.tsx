@@ -3,8 +3,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Editor } from '@/features/editor/components/Editor';
+// hooks
 import { useDebounce } from '@/hooks/useDebounce';
+import { useModal } from '@/hooks/use-modal-store';
+// fontawesome
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCloudArrowUp,
@@ -12,9 +16,15 @@ import {
   faCircleXmark,
   faSpinner,
   faArrowRotateRight,
+  faTrashCan,
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function DocumentPage() {
+  const params = useParams();
+  const docId = typeof params?.docId === 'string' ? params.docId : '';
+
+  const { onOpen } = useModal(); // ua: підкл відкриття модалок
+
   const serverContentRef = useRef(
     '<h1>New Document</h1><p>Start writing here...</p>',
   );
@@ -100,18 +110,37 @@ export default function DocumentPage() {
           </div>
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={!isDirty} // ua: кнопка заблокована, якщо юзер ще нічого не написав нового
-          className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold shadow-sm transition-all duration-200 shrink-0 ${
-            isDirty
-              ? 'bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] cursor-pointer'
-              : 'bg-muted/40 text-muted-foreground border border-border/50 cursor-not-allowed opacity-50'
-          }`}
-        >
-          <FontAwesomeIcon icon={faCloudArrowUp} className="h-3.5 w-3.5" />
-          <span>Save Changes</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* видалення активного документа */}
+          <button
+            type="button"
+            onClick={() =>
+              onOpen('deleteDocument', {
+                documentId: docId,
+                documentTitle: 'Document Editor',
+              })
+            }
+            className="flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-muted-foreground/80 hover:text-destructive hover:bg-destructive/10 border border-border/60 hover:border-destructive/20 transition-all duration-200 cursor-pointer"
+            title="Видалити цей документ"
+          >
+            <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" />
+            <span>Delete</span>
+          </button>
+
+          {/*  manual збереження */}
+          <button
+            onClick={handleSave}
+            disabled={!isDirty} // ua: кнопка заблокована, якщо юзер ще нічого не написав нового
+            className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold shadow-sm transition-all duration-200 ${
+              isDirty
+                ? 'bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] cursor-pointer'
+                : 'bg-muted/40 text-muted-foreground border border-border/50 cursor-not-allowed opacity-50'
+            }`}
+          >
+            <FontAwesomeIcon icon={faCloudArrowUp} className="h-3.5 w-3.5" />
+            <span>Save Changes</span>
+          </button>
+        </div>
       </div>
 
       <Editor

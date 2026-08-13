@@ -109,7 +109,7 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
               });
             }}
             className="h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
-            title="Створити документ у цій папці"
+            title="Create document in this folder"
           >
             <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
           </button>
@@ -124,7 +124,7 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
               });
             }}
             className="opacity-0 group-hover/folder:opacity-100 h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
-            title="Керування папкою"
+            title="Manage folder"
           >
             <FontAwesomeIcon icon={faEllipsisVertical} className="h-3 w-3" />
           </button>
