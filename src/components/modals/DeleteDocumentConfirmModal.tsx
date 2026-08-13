@@ -1,19 +1,23 @@
 'use client';
 
 import { useModal } from '@/hooks/use-modal-store';
+import { useDeleteDocument } from '@/features/documents/hooks/use-document-mutations';
 
 export const DeleteDocumentConfirmModal = () => {
   const { isOpen, onClose, type, data } = useModal();
   const isModalOpen = isOpen && type === 'deleteDocument';
+
+  const { mutateAsync: deleteDocument, isPending } = useDeleteDocument(); // ua: підключаємо хук мутації
 
   // eslint-disable-next-line
   const { documentTitle, documentId } = data || {};
 
   const onConfirm = async () => {
     try {
-      console.log('Підтверджено видалення документа за ID:', documentId);
-
-      onClose();
+      if (documentId) {
+        await deleteDocument(documentId);
+        onClose();
+      }
     } catch (error) {
       console.error(error);
     }
@@ -44,12 +48,14 @@ export const DeleteDocumentConfirmModal = () => {
           >
             Cancel
           </button>
+
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 cursor-pointer shadow-sm"
+            disabled={isPending}
+            className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Delete Permanently
+            {isPending ? 'Deleting...' : 'Delete Permanently'}
           </button>
         </div>
       </div>

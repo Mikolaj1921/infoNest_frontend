@@ -28,7 +28,7 @@ export const useCreateDocument = () => {
         visibility: DocumentVisibility.PRIVATE, // по дефолту прив
       }),
     onSuccess: (newDoc) => {
-      toast.success('Документ успішно створено');
+      toast.success('Document created successfully');
 
       // ресет кешу структури, щоб новий документ моментально зявився в NavTree
       queryClient.invalidateQueries({
@@ -39,7 +39,7 @@ export const useCreateDocument = () => {
       router.push(`/workspaces/${workspaceId}/documents/${newDoc.id}`);
     },
     onError: () => {
-      toast.error('Не вдалося створити документ. Спробуйте ще раз.');
+      toast.error('Failed to create document. Please try again.');
     },
   });
 };
@@ -57,7 +57,7 @@ export const useDeleteDocument = () => {
     mutationFn: (documentId: string) =>
       documentService.deleteDocument(documentId),
     onSuccess: (_, deletedDocId) => {
-      toast.success('Документ успішно видалено');
+      toast.success('Document deleted successfully');
 
       // апдейт дерева документів у сайдбарі
       queryClient.invalidateQueries({
@@ -70,7 +70,7 @@ export const useDeleteDocument = () => {
       }
     },
     onError: () => {
-      toast.error('Не вдалося видалити документ');
+      toast.error('Failed to delete document');
     },
   });
 };

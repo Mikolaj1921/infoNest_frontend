@@ -8,11 +8,15 @@ import {
   CreateDocumentFormValues,
 } from '@/validators/document.schema'; // ua: чистий імпорт
 
+import { useCreateDocument } from '@/features/documents/hooks/use-document-mutations';
+
 export const CreateDocumentModal = () => {
   const { isOpen, onClose, type, data } = useModal();
   const { categoryName, categoryId } = data || {};
 
   const isModalOpen = isOpen && type === 'createDocument';
+
+  const { mutateAsync: createDocument, isPending } = useCreateDocument(); // ua: хук для створення документа
 
   const {
     register,
@@ -26,10 +30,12 @@ export const CreateDocumentModal = () => {
 
   const onSubmit = async (values: CreateDocumentFormValues) => {
     try {
-      console.log('Створення документа у категорії:', categoryId, values);
-      // ua: Логіку мутацій TanStack Query та авто-редірект підключимо у фінальній сабтасці
-      reset();
-      onClose();
+      if (categoryId) {
+        // Передаємо id категорії та назву на бекенд
+        await createDocument({ categoryId, title: values.title });
+        reset();
+        onClose();
+      }
     } catch (error) {
       console.error(error);
     }
@@ -80,11 +86,13 @@ export const CreateDocumentModal = () => {
             >
               Cancel
             </button>
+
             <button
               type="submit"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm"
+              disabled={isPending}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create
+              {isPending ? 'Creating...' : 'Create'}
             </button>
           </div>
         </form>
