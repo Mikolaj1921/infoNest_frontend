@@ -3,9 +3,11 @@ import api from '@/lib/axios';
 //types
 import {
   WorkspaceDocument,
+  DocumentRevision,
   WorkspaceCategory,
   DocumentVisibility,
   WorkspaceStructureResponse,
+  DocumentRevisionsResponse,
 } from '@/types/document';
 
 // validator
@@ -139,5 +141,28 @@ export const documentService = {
   // ua: повне видалення конкретного документа за його id
   deleteDocument: async (documentId: string): Promise<void> => {
     await api.delete(`/documents/${documentId}`);
+  },
+
+  // ua: отримання списку ревізій (історії змін) конкретного документа
+  getDocumentRevisions: async (
+    documentId: string,
+  ): Promise<DocumentRevision[]> => {
+    const { data } = await api.get<DocumentRevisionsResponse>(
+      `/documents/${documentId}/revisions`,
+    );
+
+    const res = data as DocumentRevisionsResponse | null;
+    if (
+      res &&
+      typeof res === 'object' &&
+      res.success === true &&
+      Array.isArray(res.data)
+    ) {
+      return res.data;
+    }
+
+    throw new Error(
+      'Invalid response structure during fetching document revisions',
+    );
   },
 };
