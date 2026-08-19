@@ -4,6 +4,14 @@ export enum DocumentVisibility {
   PRIVATE = 'PRIVATE',
 }
 
+// ua: інтерфейс для детальної інформації про користувача (автора/редактора)
+export interface WorkspaceUserSimp {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 // ua: інтерфейс для документа воркспейсу
 export interface WorkspaceDocument {
   id: string;
@@ -12,8 +20,24 @@ export interface WorkspaceDocument {
   categoryId: string;
   ownerId: string;
   visibility: DocumentVisibility; // visibility
+  owner?: WorkspaceUserSimp; // ua: розширені дані про автора документа для метаданих
   createdAt: string;
   updatedAt: string;
+}
+
+// ua: інтерфейс для збереженої ревізії (історії змін) документа
+export interface DocumentRevision {
+  id: string;
+  documentId: string;
+  content: string;
+  createdAt: string;
+  editor: WorkspaceUserSimp; // ua: хто саме зберіг цю конкретну версію
+}
+
+// ua: для відповіді API при отриманні списку ревізій
+export interface DocumentRevisionsResponse {
+  success: boolean;
+  data: DocumentRevision[];
 }
 
 // ua: category для документа воркспейсу
