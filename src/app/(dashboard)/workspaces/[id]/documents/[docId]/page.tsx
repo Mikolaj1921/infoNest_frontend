@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import { Editor } from '@/features/editor/components/Editor';
 // hooks
 import { useDebounce } from '@/hooks/useDebounce';
@@ -17,7 +18,16 @@ import {
   faSpinner,
   faArrowRotateRight,
   faTrashCan,
+  faUser,
+  faEye,
+  faLock,
 } from '@fortawesome/free-solid-svg-icons';
+import { formatDistanceToNow } from 'date-fns';
+import { uk } from 'date-fns/locale';
+import { DocumentVisibility } from '@/types/document';
+
+// ua: тимчасова заглушка для дати оновлення документа
+const MOCK_UPDATED_AT = new Date(Date.now() - 1000 * 60 * 120).toISOString();
 
 export default function DocumentPage() {
   const params = useParams();
@@ -34,6 +44,17 @@ export default function DocumentPage() {
   const [syncStatus, setSyncStatus] = useState<'saved' | 'saving' | 'error'>(
     'saved',
   );
+
+  const mockDocument = {
+    id: docId,
+    title: 'Document Editor',
+    updatedAt: MOCK_UPDATED_AT,
+    visibility: DocumentVisibility.PRIVATE,
+    owner: {
+      name: 'Jan Yazh',
+      avatarUrl: undefined,
+    },
+  };
 
   const debouncedContent = useDebounce(htmlContent, 1500);
 
@@ -68,7 +89,7 @@ export default function DocumentPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/40 pb-4 text-left">
         <div className="space-y-1">
           <h1 className="text-xl font-bold tracking-tight text-foreground">
-            Document Editor
+            {mockDocument.title}
           </h1>
 
           <div className="flex items-center gap-1.5 text-xs transition-all duration-300">
@@ -108,6 +129,56 @@ export default function DocumentPage() {
               </div>
             )}
           </div>
+
+          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-muted-foreground/80">
+            <div className="flex items-center gap-1.5 bg-secondary/30 px-2.5 py-1 rounded-md border border-border/20">
+              {mockDocument.owner.avatarUrl ? (
+                <Image
+                  src={mockDocument.owner.avatarUrl}
+                  alt={mockDocument.owner.name}
+                  className="h-3.5 w-3.5 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-3.5 w-3.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <FontAwesomeIcon
+                    icon={faUser}
+                    className="text-[8px] text-primary"
+                  />
+                </div>
+              )}
+              <span className="font-medium text-foreground/90">
+                {mockDocument.owner.name}
+              </span>
+            </div>
+            <span className="text-muted-foreground/30">•</span>
+            <span title={mockDocument.updatedAt}>
+              Оновлено{' '}
+              {formatDistanceToNow(new Date(mockDocument.updatedAt), {
+                addSuffix: true,
+                locale: uk,
+              })}
+            </span>
+            <span className="text-muted-foreground/30">•</span>
+            <div
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                mockDocument.visibility === DocumentVisibility.PUBLIC
+                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+              }`}
+            >
+              <FontAwesomeIcon
+                icon={
+                  mockDocument.visibility === DocumentVisibility.PUBLIC
+                    ? faEye
+                    : faLock
+                }
+                className="text-[10px]"
+              />
+              <span className="uppercase tracking-wider">
+                {mockDocument.visibility}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -117,7 +188,7 @@ export default function DocumentPage() {
             onClick={() =>
               onOpen('deleteDocument', {
                 documentId: docId,
-                documentTitle: 'Document Editor',
+                documentTitle: mockDocument.title,
               })
             }
             className="flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-muted-foreground/80 hover:text-destructive hover:bg-destructive/10 border border-border/60 hover:border-destructive/20 transition-all duration-200 cursor-pointer"
