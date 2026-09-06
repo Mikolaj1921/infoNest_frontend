@@ -7,7 +7,8 @@ export type ModalType =
   | 'createCategory'
   | 'deleteCategory'
   | 'createDocument'
-  | 'deleteDocument';
+  | 'deleteDocument'
+  | 'revisionHistory';
 
 // ua: інтерфейс даних
 interface ModalData {
