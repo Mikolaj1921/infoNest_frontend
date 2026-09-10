@@ -1,6 +1,7 @@
 // ua: modal store для керування станом модальних вікон
 
 import { create } from 'zustand';
+import { DocumentRevision } from '@/types/document';
 
 // ua: типи модальних вікон
 export type ModalType =
@@ -19,6 +20,7 @@ interface ModalData {
   // Дані для документів
   documentId?: string;
   documentTitle?: string;
+  onSelectRevision?: (revision: DocumentRevision) => void; // колбек для вибору версії документа
 }
 
 // ua: інтерфейс стану модального вікна

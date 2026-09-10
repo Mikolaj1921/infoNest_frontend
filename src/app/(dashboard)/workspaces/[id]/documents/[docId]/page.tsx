@@ -21,12 +21,14 @@ import {
   faUser,
   faEye,
   faLock,
+  faClockRotateLeft,
+  faEyeSlash,
+  faArrowLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { DocumentVisibility } from '@/types/document';
+import { DocumentVisibility, DocumentRevision } from '@/types/document';
 
-// ua: тимчасова заглушка для дати оновлення документа
 const MOCK_UPDATED_AT = new Date(Date.now() - 1000 * 60 * 120).toISOString();
 
 export default function DocumentPage() {
@@ -44,6 +46,8 @@ export default function DocumentPage() {
   const [syncStatus, setSyncStatus] = useState<'saved' | 'saving' | 'error'>(
     'saved',
   );
+  const [selectedRevision, setSelectedRevision] =
+    useState<DocumentRevision | null>(null);
 
   const mockDocument = {
     id: docId,
@@ -51,7 +55,7 @@ export default function DocumentPage() {
     updatedAt: MOCK_UPDATED_AT,
     visibility: DocumentVisibility.PRIVATE,
     owner: {
-      name: 'Jan Yazh',
+      name: 'Олексій Коваленко',
       avatarUrl: undefined,
     },
   };
@@ -60,6 +64,7 @@ export default function DocumentPage() {
 
   // ua: колбек для отримання змін від компонента Editor
   const handleContentChange = (newHtml: string, currentIsDirty: boolean) => {
+    if (selectedRevision) return; // блокуємо зміни в режимі перегляду ревізії
     setHtmlContent(newHtml);
     setIsDirty(currentIsDirty);
 
@@ -69,6 +74,7 @@ export default function DocumentPage() {
   };
 
   useEffect(() => {
+    if (selectedRevision) return;
     if (debouncedContent === serverContentRef.current) return;
 
     console.log('Triggering Auto-save', debouncedContent);
@@ -78,14 +84,64 @@ export default function DocumentPage() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [debouncedContent]);
+  }, [debouncedContent, selectedRevision]);
 
   const handleSave = () => {
+    if (selectedRevision) return;
     console.log('Saving content to backend:', htmlContent);
+  };
+
+  const handleOpenHistory = () => {
+    onOpen('revisionHistory', {
+      documentId: docId,
+      documentTitle: mockDocument.title,
+      onSelectRevision: (revision) => {
+        setSelectedRevision(revision);
+      },
+    });
+  };
+
+  const handleExitPreview = () => {
+    setSelectedRevision(null);
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full max-w-5xl mx-auto p-4">
+      {/* Плашка-попередження режиму перегляду старої ревізії */}
+      {selectedRevision && (
+        <div className="w-full bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
+              <FontAwesomeIcon icon={faEyeSlash} className="h-4 w-4" />
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-sm font-bold text-amber-500">
+                Ви переглядаєте стару версію документа
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Збережена{' '}
+                {formatDistanceToNow(new Date(selectedRevision.createdAt), {
+                  addSuffix: true,
+                  locale: uk,
+                })}{' '}
+                користувачем{' '}
+                <span className="font-semibold text-foreground">
+                  {selectedRevision.editor.name}
+                </span>
+                . Редагування тимчасово вимкнено.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleExitPreview}
+            className="flex items-center gap-2 rounded-xl bg-amber-500 text-black font-bold px-4 py-2 text-xs shadow-sm hover:bg-amber-400 active:scale-[0.98] transition cursor-pointer shrink-0"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="text-[10px]" />
+            <span>Повернутися до актуальної версії</span>
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/40 pb-4 text-left">
         <div className="space-y-1">
           <h1 className="text-xl font-bold tracking-tight text-foreground">
@@ -93,7 +149,7 @@ export default function DocumentPage() {
           </h1>
 
           <div className="flex items-center gap-1.5 text-xs transition-all duration-300">
-            {syncStatus === 'saving' && (
+            {syncStatus === 'saving' && !selectedRevision && (
               <span className="flex items-center gap-1 text-primary font-medium animate-pulse">
                 <FontAwesomeIcon
                   icon={faSpinner}
@@ -103,14 +159,14 @@ export default function DocumentPage() {
               </span>
             )}
 
-            {syncStatus === 'saved' && (
+            {syncStatus === 'saved' && !selectedRevision && (
               <span className="flex items-center gap-1 text-emerald-500 font-medium transition-colors">
                 <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3" />
                 All changes saved
               </span>
             )}
 
-            {syncStatus === 'error' && (
+            {syncStatus === 'error' && !selectedRevision && (
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 text-destructive font-bold transition-colors">
                   <FontAwesomeIcon icon={faCircleXmark} className="h-3 w-3" />
@@ -128,6 +184,12 @@ export default function DocumentPage() {
                 </button>
               </div>
             )}
+
+            {selectedRevision && (
+              <span className="text-amber-500 font-medium text-xs">
+                Режим перегляду історії змін
+              </span>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-muted-foreground/80">
@@ -136,7 +198,9 @@ export default function DocumentPage() {
                 <Image
                   src={mockDocument.owner.avatarUrl}
                   alt={mockDocument.owner.name}
-                  className="h-3.5 w-3.5 rounded-full object-cover"
+                  width={14}
+                  height={14}
+                  className="rounded-full object-cover"
                 />
               ) : (
                 <div className="h-3.5 w-3.5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -182,6 +246,17 @@ export default function DocumentPage() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* Кнопка відкриття історії змін документа */}
+          <button
+            type="button"
+            onClick={handleOpenHistory}
+            className="flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-muted-foreground/80 hover:text-foreground hover:bg-accent/40 border border-border/60 transition-all duration-200 cursor-pointer"
+            title="Історія змін"
+          >
+            <FontAwesomeIcon icon={faClockRotateLeft} className="h-3.5 w-3.5" />
+            <span>History</span>
+          </button>
+
           {/* видалення активного документа */}
           <button
             type="button"

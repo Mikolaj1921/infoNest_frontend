@@ -94,10 +94,14 @@ export const RevisionHistorySidebar = () => {
               {[...revisions].reverse().map((revision, index) => {
                 const isLatest = index === 0;
                 return (
+                  // update
                   <button
                     key={revision.id}
                     onClick={() => {
-                      console.log('Клік на перегляд ревізії:', revision.id);
+                      if (data.onSelectRevision) {
+                        data.onSelectRevision(revision);
+                      }
+                      onClose();
                     }}
                     className="w-full text-left rounded-xl p-3 border border-border/40 bg-background/40 hover:bg-accent/40 hover:border-primary/30 transition-all group flex flex-col gap-2 cursor-pointer focus:outline-none"
                   >
