@@ -7,6 +7,7 @@ import { DocumentVisibility } from '@/types/document';
 
 vi.mock('@/lib/axios', () => ({
   default: {
+    get: vi.fn(),
     post: vi.fn(),
     delete: vi.fn(),
   },
@@ -78,6 +79,46 @@ describe('documentService', () => {
       await documentService.deleteDocument('doc-777');
 
       expect(api.delete).toHaveBeenCalledWith('/documents/doc-777');
+    });
+  });
+
+  describe('getDocumentRevisions', () => {
+    it('має успішно повернути масив ревізій документа при коді 200', async () => {
+      const mockRevisions = [
+        {
+          id: 'rev-1',
+          documentId: 'doc-123',
+          content: '<p>v1</p>',
+          createdAt: '2026-01-01T10:00:00.000Z',
+          editor: { id: 'u-1', name: 'Editor 1', email: 'ed@test.com' },
+        },
+      ];
+
+      vi.mocked(api.get).mockResolvedValueOnce({
+        status: 200,
+        data: {
+          success: true,
+          data: mockRevisions,
+        },
+      });
+
+      const result = await documentService.getDocumentRevisions('doc-123');
+
+      expect(api.get).toHaveBeenCalledWith('/documents/doc-123/revisions');
+      expect(result).toEqual(mockRevisions);
+    });
+
+    it('має викинути помилку, якщо success має значення false або структура невалідна', async () => {
+      vi.mocked(api.get).mockResolvedValueOnce({
+        status: 200,
+        data: { success: false, data: null },
+      });
+
+      await expect(
+        documentService.getDocumentRevisions('doc-123'),
+      ).rejects.toThrow(
+        'Invalid response structure during fetching document revisions',
+      );
     });
   });
 });
