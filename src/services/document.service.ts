@@ -1,4 +1,5 @@
 import api from '@/lib/axios';
+import axios from 'axios';
 
 //types
 import {
@@ -47,24 +48,37 @@ export const documentService = {
   getWorkspaceStructure: async (
     workspaceId: string,
   ): Promise<WorkspaceCategory[]> => {
-    // get data
-    const { data } = await api.get<WorkspaceStructureResponse>(
-      `/workspaces/${workspaceId}/structure`,
-    );
+    try {
+      // get data
+      const { data } = await api.get<WorkspaceStructureResponse>(
+        `/workspaces/${workspaceId}/structure`,
+      );
 
-    const res = data as WorkspaceStructureResponse | null;
+      const res = data as WorkspaceStructureResponse | null;
 
-    // ua: перевірка структури відповіді через просту валідацію
-    if (
-      res &&
-      typeof res === 'object' &&
-      res.success === true &&
-      Array.isArray(res.data)
-    ) {
-      return res.data; // ua: перевірений масив категорій з документами
+      // ua: перевірка структури відповіді через просту валідацію
+      if (
+        res &&
+        typeof res === 'object' &&
+        res.success === true &&
+        Array.isArray(res.data)
+      ) {
+        return res.data; // ua: перевірений масив категорій з документами
+      }
+
+      return []; // ua: заглушка
+    } catch (error) {
+      // --- ua: КРИТИЧНИЙ ФІКС: Перевірка 404 має бути СУВОРО всередині блоку catch ---
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        console.log(
+          `[infoNest] Workspace ${workspaceId} is empty. Rendering empty Sidebar structure.`,
+        );
+        return []; // повертаємо чистий масив, блокуючи викидання червоної помилки в інтерцепторі
+      }
+
+      // Якщо сталася якась інша помилка (наприклад, 500) — пускаємо її далі
+      return Promise.reject(error);
     }
-
-    return []; // ua: заглушка
   },
 
   // ua: отримання одного документа

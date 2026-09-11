@@ -98,6 +98,14 @@ api.interceptors.response.use(
       }
     }
 
+    // ua: якщо 401 прийшов від запиту, який не підлягає рефрешу, або якщо сталася якась інша помилка
+    if (
+      error.response?.status === 404 &&
+      originalRequest.url?.includes('/structure')
+    ) {
+      return Promise.reject(error); // відхиляється проміс далі, щоб catch в сервісі зловив
+    }
+
     // this will catch all errors from API calls and log them
     const data = error.response?.data as { message?: string } | undefined;
     const message = data?.message || 'Something went wrong';
