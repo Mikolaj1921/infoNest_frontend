@@ -28,6 +28,7 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
           levels: [1, 2, 3],
         },
       }),
+
       // ua:  підказкa Placeholder
       Placeholder.configure({
         placeholder: 'Please start typing your text here...',
@@ -35,6 +36,7 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
     ],
     // content for the editor
     content: initialContent,
+    immediatelyRender: false, // ua:  відкладений рендеринг редактора для покращення продуктивності
     // onUpdate callback to handle content changes
     onUpdate: ({ editor: currentEditor }) => {
       const currentHTML = currentEditor.getHTML();

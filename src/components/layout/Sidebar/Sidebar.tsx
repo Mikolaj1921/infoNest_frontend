@@ -132,9 +132,18 @@ export const Sidebar = () => {
               Structure
             </span>
             <button
+              disabled={!workspaceId} // ua: блокуємо клік, якщо немає ID
               onClick={() => onOpen('createCategory')}
-              className="hover:bg-accent p-1 rounded-md transition cursor-pointer"
-              title="Create New Category"
+              className={`p-1 rounded-md transition duration-200 ${
+                workspaceId
+                  ? 'hover:bg-accent text-foreground cursor-pointer'
+                  : 'opacity-30 text-muted-foreground cursor-not-allowed'
+              }`}
+              title={
+                workspaceId
+                  ? 'Створити папку'
+                  : 'Оберіть воркспейс для створення папки'
+              }
             >
               <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
             </button>

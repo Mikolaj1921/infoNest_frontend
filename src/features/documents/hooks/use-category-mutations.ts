@@ -3,10 +3,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  categoryService,
-  CreateCategoryDTO,
-} from '@/services/category.service';
+import { categoryService } from '@/services/category.service';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -17,8 +14,8 @@ export const useCreateCategory = () => {
   const workspaceId = typeof params?.id === 'string' ? params.id : '';
 
   return useMutation({
-    mutationFn: (dto: CreateCategoryDTO) =>
-      categoryService.createCategory(workspaceId, dto),
+    mutationFn: (dto: { name: string }) =>
+      categoryService.createCategory(workspaceId, dto.name),
     onSuccess: () => {
       toast.success('Folder created successfully');
       // ua: валідація кешу структури для миттєвого оновлення Сайдбару

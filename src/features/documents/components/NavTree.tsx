@@ -36,7 +36,7 @@ const DocItem = ({ doc }: DocItemProps) => {
   return (
     <div className="ml-4 border-l border-border/40 pl-2 space-y-1">
       <Link
-        href={`/workspace/${workspaceId}/documents/${doc.id}`}
+        href={`/workspaces/${workspaceId}/documents/${doc.id}`}
         className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200 cursor-pointer text-left group ${
           isActive
             ? 'bg-primary/10 text-primary font-semibold'

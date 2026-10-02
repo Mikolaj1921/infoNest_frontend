@@ -33,7 +33,12 @@ const MOCK_UPDATED_AT = new Date(Date.now() - 1000 * 60 * 120).toISOString();
 
 export default function DocumentPage() {
   const params = useParams();
-  const docId = typeof params?.docId === 'string' ? params.docId : '';
+  const docId =
+    typeof params?.docId === 'string'
+      ? params.docId
+      : typeof params?.docid === 'string'
+        ? params.docid
+        : '';
 
   const { onOpen } = useModal(); // ua: підкл відкриття модалок
 

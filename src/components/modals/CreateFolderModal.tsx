@@ -24,7 +24,7 @@ type FormValues = z.infer<typeof formSchema>;
 export const CreateFolderModal = () => {
   const { isOpen, onClose, type } = useModal();
   const params = useParams();
-  // eslint-disable-next-line
+
   const workspaceId = typeof params?.id === 'string' ? params.id : '';
 
   const { mutateAsync: createCategory, isPending } = useCreateCategory(); // ua: виклик хук
@@ -69,42 +69,66 @@ export const CreateFolderModal = () => {
           Add a new category to organize your documents in the workspace.
         </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1.5 text-left">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">
-              Category Name
-            </label>
-            <input
-              {...register('name')}
-              type="text"
-              autoFocus
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              placeholder="For example: Marketing, Sprint 5..."
-            />
-            {errors.name && (
-              <p className="text-xs font-medium text-destructive mt-1">
-                {errors.name.message}
+        {!workspaceId ? (
+          <div className="space-y-4 text-left">
+            <div className="rounded-md bg-amber-500/10 p-3 border border-amber-500/20">
+              <p className="text-sm text-amber-500 font-medium">
+                Попередження: Не обрано робочий простір.
               </p>
-            )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Створення папок (категорій) можливе лише всередині конкретного
+                воркспейсу. Будь ласка, оберіть або створіть воркспейс у
+                верхньому меню перед налаштуванням структури.
+              </p>
+            </div>
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm"
+              >
+                Зрозуміло
+              </button>
+            </div>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-semibold uppercase text-muted-foreground">
+                Category Name
+              </label>
+              <input
+                {...register('name')}
+                type="text"
+                autoFocus
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                placeholder="For example: Marketing, Sprint 5..."
+              />
+              {errors.name && (
+                <p className="text-xs font-medium text-destructive mt-1">
+                  {errors.name.message}
+                </p>
+              )}
+            </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm disabled:opacity-50"
-            >
-              {isPending ? 'Creating...' : 'Create'}
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm disabled:opacity-50"
+              >
+                {isPending ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

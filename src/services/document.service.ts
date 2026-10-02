@@ -1,3 +1,5 @@
+//fix with ai problem with doc problems
+
 import api from '@/lib/axios';
 import axios from 'axios';
 
@@ -10,8 +12,6 @@ import {
   WorkspaceStructureResponse,
   DocumentRevisionsResponse,
 } from '@/types/document';
-
-// validator
 
 // dto для створення документа
 export interface CreateDocumentDTO {
@@ -49,34 +49,49 @@ export const documentService = {
     workspaceId: string,
   ): Promise<WorkspaceCategory[]> => {
     try {
-      // get data
       const { data } = await api.get<WorkspaceStructureResponse>(
         `/workspaces/${workspaceId}/structure`,
       );
 
-      const res = data as WorkspaceStructureResponse | null;
+      console.log('[infoNest DEBUG] Дані структури від бекенду:', data);
+      const res: WorkspaceStructureResponse | null = data;
 
-      // ua: перевірка структури відповіді через просту валідацію
-      if (
-        res &&
-        typeof res === 'object' &&
-        res.success === true &&
-        Array.isArray(res.data)
-      ) {
-        return res.data; // ua: перевірений масив категорій з документами
+      if (res && typeof res === 'object' && res.success === true && res.data) {
+        // Варіант 1: Якщо дані прийшли прямим масивом (як ми очікували)
+        if (Array.isArray(res.data)) {
+          return res.data;
+        }
+
+        // Варіант 2: Якщо бекенд загорнув масив в об'єкт { categories: [...] }
+        const dataObj = res.data as unknown as Record<string, unknown>;
+        if (
+          typeof dataObj === 'object' &&
+          dataObj !== null &&
+          'categories' in dataObj &&
+          Array.isArray(dataObj.categories)
+        ) {
+          return dataObj.categories as WorkspaceCategory[];
+        }
+
+        // Варіант 3: Якщо бекенд загорнув масив в об'єкт { structure: [...] }
+        if (
+          typeof dataObj === 'object' &&
+          dataObj !== null &&
+          'structure' in dataObj &&
+          Array.isArray(dataObj.structure)
+        ) {
+          return dataObj.structure as WorkspaceCategory[];
+        }
       }
 
-      return []; // ua: заглушка
+      return [];
     } catch (error) {
-      // --- ua: КРИТИЧНИЙ ФІКС: Перевірка 404 має бути СУВОРО всередині блоку catch ---
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         console.log(
           `[infoNest] Workspace ${workspaceId} is empty. Rendering empty Sidebar structure.`,
         );
-        return []; // повертаємо чистий масив, блокуючи викидання червоної помилки в інтерцепторі
+        return [];
       }
-
-      // Якщо сталася якась інша помилка (наприклад, 500) — пускаємо її далі
       return Promise.reject(error);
     }
   },
@@ -87,7 +102,6 @@ export const documentService = {
       `/documents/${docId}`,
     );
 
-    // ua: перевірка
     const res = data as SingleDocumentResponse | null;
     if (
       res &&
@@ -109,14 +123,12 @@ export const documentService = {
     dto: UpdateDocumentDTO,
     signal?: AbortSignal, // ua: параметр для сигналу скасування запиту
   ): Promise<WorkspaceDocument> => {
-    // get data
     const { data } = await api.patch<SingleDocumentResponse>(
       `/documents/${docId}`,
       dto,
       { signal },
     );
 
-    // ua: перевірка
     const res = data as SingleDocumentResponse | null;
     if (
       res &&
@@ -139,13 +151,29 @@ export const documentService = {
     categoryId: string,
     dto: CreateDocumentDTO,
   ): Promise<WorkspaceDocument> => {
-    const { data } = await api.post<DocumentActionResponse>(
-      `/categories/${categoryId}/documents`,
-      dto,
-    );
+    const { data } = await api.post<DocumentActionResponse>('/documents', {
+      ...dto,
+      categoryId,
+    });
 
-    const res = data as DocumentActionResponse | null;
+    const res: DocumentActionResponse | null = data;
+
     if (res && typeof res === 'object' && res.success === true && res.data) {
+      // ua: Безпечне приведення типів через unknown для задоволення лінтера
+      const dataObj = res.data as unknown as Record<string, unknown>;
+
+      // Варіант 1: Якщо бэкенд загорнув документ в об'єкт { document: {...} }
+      if (
+        typeof dataObj === 'object' &&
+        dataObj !== null &&
+        'document' in dataObj &&
+        dataObj.document &&
+        typeof dataObj.document === 'object'
+      ) {
+        return dataObj.document as WorkspaceDocument;
+      }
+
+      // Варіант 2: Якщо бэкенд віддав документ прямим об'єктом у data
       return res.data;
     }
 
@@ -161,22 +189,31 @@ export const documentService = {
   getDocumentRevisions: async (
     documentId: string,
   ): Promise<DocumentRevision[]> => {
+    // ua: Повністю прибрали any з типізації Axios запиту
     const { data } = await api.get<DocumentRevisionsResponse>(
       `/documents/${documentId}/revisions`,
     );
 
-    const res = data as DocumentRevisionsResponse | null;
-    if (
-      res &&
-      typeof res === 'object' &&
-      res.success === true &&
-      Array.isArray(res.data)
-    ) {
-      return res.data;
+    const res: DocumentRevisionsResponse | null = data;
+
+    if (res && typeof res === 'object' && res.success === true && res.data) {
+      // ua: Використовуємо імпортований тип для суворої перевірки
+      const dataObj = res.data as unknown as Record<string, unknown>;
+
+      if (
+        typeof dataObj === 'object' &&
+        dataObj !== null &&
+        'revisions' in dataObj &&
+        Array.isArray(dataObj.revisions)
+      ) {
+        return dataObj.revisions as DocumentRevision[];
+      }
+
+      if (Array.isArray(res.data)) {
+        return res.data;
+      }
     }
 
-    throw new Error(
-      'Invalid response structure during fetching document revisions',
-    );
+    return [];
   },
 };
