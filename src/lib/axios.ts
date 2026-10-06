@@ -14,7 +14,7 @@ interface FailedRequest {
 
 const api = axios.create({
   // ua: додаємо захист на випадок, якщо змінна чомусь пуста
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api', //fix
   headers: {
     'Content-Type': 'application/json',
   },
@@ -49,6 +49,14 @@ api.interceptors.response.use(
     const { clearAuth } = useAuthStore.getState().actions;
 
     if (!originalRequest) return Promise.reject(error);
+
+    // ua: захист від петлі рефрешу
+    if (originalRequest.url?.includes('/auth/refresh')) {
+      isRefreshing = false;
+      failedRequestsQueue = [];
+      clearAuth();
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       // ua: якщо це запит профілю, відразу розлогінюємо без рефрешу
