@@ -55,3 +55,22 @@ export interface WorkspaceStructureResponse {
   success: boolean;
   data: WorkspaceCategory[]; // ua: масив категорій з документами
 }
+
+//---- task 19
+
+// ua: для відповіді API при отриманні конкретного документа
+export interface FileAttachment {
+  id: string;
+  documentId: string;
+  ownerId: string;
+  fileName: string;
+  url: string;
+  size: number;
+  createdAt: string;
+}
+
+// ua: для відповіді API - doc file
+export interface DocumentFilesResponse {
+  success: boolean;
+  data: FileAttachment[];
+}
