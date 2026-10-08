@@ -5,7 +5,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
+// components
 import { Editor } from '@/features/editor/components/Editor';
+import { DocumentAttachments } from '@/features/documents/components/DocumentAttachments';
+
 // hooks
 import { useDebounce } from '@/hooks/useDebounce';
 import { useModal } from '@/hooks/use-modal-store';
@@ -298,6 +301,8 @@ export default function DocumentPage() {
         initialContent="<h1>New Document</h1><p>Start writing here...</p>" // тимчасова заглушка до підключення get запиту
         onContentChange={handleContentChange}
       />
+
+      <DocumentAttachments documentId={docId} />
     </div>
   );
 }

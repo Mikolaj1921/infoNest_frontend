@@ -109,7 +109,8 @@ api.interceptors.response.use(
     // ua: якщо 401 прийшов від запиту, який не підлягає рефрешу, або якщо сталася якась інша помилка
     if (
       error.response?.status === 404 &&
-      originalRequest.url?.includes('/structure')
+      (originalRequest.url?.includes('/structure') ||
+        originalRequest.url?.includes('/files'))
     ) {
       return Promise.reject(error); // відхиляється проміс далі, щоб catch в сервісі зловив
     }
