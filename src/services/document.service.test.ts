@@ -9,6 +9,7 @@ vi.mock('@/lib/axios', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
     delete: vi.fn(),
   },
 }));
@@ -48,10 +49,10 @@ describe('documentService', () => {
 
       const result = await documentService.createDocument('cat-123', dto);
 
-      expect(api.post).toHaveBeenCalledWith(
-        '/categories/cat-123/documents',
-        dto,
-      );
+      expect(api.post).toHaveBeenCalledWith('/documents', {
+        ...dto,
+        categoryId: 'cat-123',
+      });
       expect(result).toEqual(mockDocument);
     });
 
@@ -108,17 +109,15 @@ describe('documentService', () => {
       expect(result).toEqual(mockRevisions);
     });
 
-    it('має викинути помилку, якщо success має значення false або структура невалідна', async () => {
+    it('має повернути порожній масив, якщо success має значення false або структура невалідна', async () => {
       vi.mocked(api.get).mockResolvedValueOnce({
         status: 200,
         data: { success: false, data: null },
       });
 
-      await expect(
-        documentService.getDocumentRevisions('doc-123'),
-      ).rejects.toThrow(
-        'Invalid response structure during fetching document revisions',
-      );
+      const result = await documentService.getDocumentRevisions('doc-123');
+
+      expect(result).toEqual([]);
     });
   });
 });

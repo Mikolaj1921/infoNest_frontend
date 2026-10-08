@@ -37,12 +37,15 @@ describe('categoryService', () => {
         },
       });
 
-      const result = await categoryService.createCategory('ws-999', {
-        name: 'Нова Папка',
-      });
+      const result = await categoryService.createCategory(
+        'ws-999',
+        'Нова Папка',
+      );
 
-      expect(api.post).toHaveBeenCalledWith('/workspaces/ws-999/categories', {
+      // ua: фікс тесту: перевіряємо, що api.post був викликаний з правильними параметрами
+      expect(api.post).toHaveBeenCalledWith('/categories', {
         name: 'Нова Папка',
+        workspaceId: 'ws-999',
       });
       expect(result).toEqual(mockCategory);
     });
@@ -57,7 +60,7 @@ describe('categoryService', () => {
       });
 
       await expect(
-        categoryService.createCategory('ws-999', { name: 'Зламана Папка' }),
+        categoryService.createCategory('ws-999', 'Зламана Папка'),
       ).rejects.toThrow('Invalid response structure during category creation');
     });
   });

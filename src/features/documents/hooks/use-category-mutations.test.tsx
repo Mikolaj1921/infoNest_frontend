@@ -61,9 +61,10 @@ describe('Category Mutations Hooks', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(categoryService.createCategory).toHaveBeenCalledWith('ws-123', {
-        name: 'Папка Тест',
-      });
+      expect(categoryService.createCategory).toHaveBeenCalledWith(
+        'ws-123',
+        'Папка Тест',
+      );
 
       expect(toast.success).toHaveBeenCalledWith('Folder created successfully');
 
