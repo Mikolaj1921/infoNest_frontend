@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useDocumentFiles } from '../hooks/useDocumentFiles';
 import { formatBytes } from '@/utils/file-format';
 import { formatDistanceToNow } from 'date-fns';
@@ -16,6 +16,7 @@ import {
   faFileAlt,
   faTrashCan,
   faSpinner,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { fileService } from '@/services/file.service';
@@ -25,7 +26,6 @@ interface DocumentAttachmentsProps {
   documentId: string;
 }
 
-// ua: доп функція для визначення іконки за розширенням файлу
 const getFileIcon = (fileName: string) => {
   const extension = fileName.split('.').pop()?.toLowerCase();
 
@@ -63,7 +63,12 @@ export const DocumentAttachments = ({
   const queryClient = useQueryClient();
   const { data: files, isLoading, isError } = useDocumentFiles(documentId);
 
-  // ua: видалення файлу з фоновим скиданням кешу
+  // ua: локал стейт для збереження URL картинки та яка передається через лайтбокс
+  const [activePreviewImage, setActivePreviewImage] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
+
   const handleDeleteFile = async (e: React.MouseEvent, fileId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -77,6 +82,21 @@ export const DocumentAttachments = ({
     } catch (error) {
       console.error('Failed to delete file:', error);
       toast.error('Не вдалося видалити файл');
+    }
+  };
+
+  // ua: обробник кліку на картку файлу (лайтбокс або скачування)
+  const handleFileClick = (fileUrl: string, fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(
+      extension || '',
+    );
+
+    if (isImage) {
+      setActivePreviewImage({ url: fileUrl, name: fileName });
+    } else {
+      // інший файл - відкриваємо/скачуємо в новій вкладці через р2 лінк
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -115,20 +135,19 @@ export const DocumentAttachments = ({
         )}
       </div>
 
-      {/* пустий стан */}
       {(!files || files.length === 0) && (
         <p className="text-xs italic text-muted-foreground/60 pl-1">
           No files attached to this document yet.
         </p>
       )}
 
-      {/*адап сітка карток прикріплених файлів */}
       {files && files.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {files.map((file) => (
             <div
               key={file.id}
-              className="group relative flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 hover:bg-accent/40 hover:border-primary/20 transition-all duration-200"
+              onClick={() => handleFileClick(file.url, file.fileName)}
+              className="group relative flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 hover:bg-accent/40 hover:border-primary/20 transition-all duration-200 cursor-pointer select-none"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="h-9 w-9 rounded-lg bg-secondary/60 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 transition-colors shrink-0 border border-border/10">
@@ -137,8 +156,6 @@ export const DocumentAttachments = ({
                     className="h-4 w-4"
                   />
                 </div>
-
-                {/* мета файлу */}
                 <div className="flex flex-col min-w-0 space-y-0.5">
                   <span
                     className="text-xs font-semibold text-foreground/90 truncate group-hover:text-primary transition-colors"
@@ -159,7 +176,6 @@ export const DocumentAttachments = ({
                 </div>
               </div>
 
-              {/* видалення файлів */}
               <button
                 type="button"
                 onClick={(e) => handleDeleteFile(e, file.id)}
@@ -170,6 +186,36 @@ export const DocumentAttachments = ({
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* модалка */}
+      {activePreviewImage && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setActivePreviewImage(null)}
+        >
+          {/* Кнопка закриття та назва файлу зверху */}
+          <div className="absolute top-4 left-4 right-4 flex items-center justify-between text-white z-10">
+            <span className="text-sm font-semibold truncate max-w-[80%] opacity-80">
+              {activePreviewImage.name}
+            </span>
+            <button
+              onClick={() => setActivePreviewImage(null)}
+              className="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition cursor-pointer"
+            >
+              <FontAwesomeIcon icon={faXmark} className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* картинка */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={activePreviewImage.url}
+            alt={activePreviewImage.name}
+            className="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-200 select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
