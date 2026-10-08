@@ -6,9 +6,25 @@
 import React from 'react';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DocumentPage from './page';
 import { useModal } from '@/hooks/use-modal-store';
 import { DocumentRevision } from '@/types/document';
+
+// ua: повне глушіння хука використання файлів, щоб він повертав порожній масив у цьому тесті
+vi.mock('@/features/documents/hooks/useDocumentFiles', () => ({
+  useDocumentFiles: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
+vi.mock('@/services/file.service', () => ({
+  fileService: {
+    deleteFile: vi.fn(),
+  },
+}));
 
 // ua: Мокаємо навігацію Next.js
 vi.mock('next/navigation', () => ({
@@ -51,8 +67,15 @@ vi.mock('@/features/editor/components/Editor', () => ({
 
 describe('Page Component: DocumentPage UI & Indicators', () => {
   const mockOpen = vi.fn();
+  let queryClient: QueryClient;
 
   beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
     vi.clearAllMocks();
 
     // ua: Налаштування дефолтного стану сховища модалок
@@ -65,15 +88,19 @@ describe('Page Component: DocumentPage UI & Indicators', () => {
     });
   });
 
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
   test('1. Початковий рендеринг сторінки та базового заголовка редактора', () => {
-    render(<DocumentPage />);
+    render(<DocumentPage />, { wrapper });
 
     expect(screen.queryByText('Document Editor')).not.toBeNull();
     expect(screen.queryByText('All changes saved')).not.toBeNull();
   });
 
   test('2. Блокування кнопки Save Changes, якщо в редакторі немає нових незбережених змін', () => {
-    render(<DocumentPage />);
+    render(<DocumentPage />, { wrapper });
 
     const saveButton = screen.getByText('Save Changes').closest('button');
 
@@ -84,14 +111,14 @@ describe('Page Component: DocumentPage UI & Indicators', () => {
   });
 
   test('3. Відображення текстового індикатора незбережених змін', () => {
-    render(<DocumentPage />);
+    render(<DocumentPage />, { wrapper });
 
     expect(screen.queryByText('All changes saved')).not.toBeNull();
     expect(screen.queryByText('Saving to cloud...')).toBeNull();
   });
 
   test('4. Sub-task 2: Рендеринг імені автора, бейдж приватності та відносної дати оновлення', () => {
-    render(<DocumentPage />);
+    render(<DocumentPage />, { wrapper });
 
     expect(screen.queryByText('Олексій Коваленко')).not.toBeNull();
     expect(screen.queryByText('PRIVATE')).not.toBeNull();
@@ -99,7 +126,7 @@ describe('Page Component: DocumentPage UI & Indicators', () => {
   });
 
   test('5. Sub-task 3: Клік на кнопку History має викликати панель історії змін із правильними ID', () => {
-    render(<DocumentPage />);
+    render(<DocumentPage />, { wrapper });
 
     const historyButton = screen.getByRole('button', { name: /History/i });
     fireEvent.click(historyButton);
@@ -124,7 +151,7 @@ describe('Page Component: DocumentPage UI & Indicators', () => {
       }
     });
 
-    render(<DocumentPage />);
+    render(<DocumentPage />, { wrapper });
 
     const historyButton = screen.getByRole('button', { name: /History/i });
     fireEvent.click(historyButton);
