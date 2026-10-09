@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useDocumentFiles } from '../hooks/useDocumentFiles';
 import { formatBytes } from '@/utils/file-format';
+import { validateUploadedFile } from '@/utils/file-validator';
+import { UploadProgress } from './UploadProgress';
 import { formatDistanceToNow } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,6 +19,7 @@ import {
   faTrashCan,
   faSpinner,
   faXmark,
+  faArrowUpFromBracket,
 } from '@fortawesome/free-solid-svg-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { fileService } from '@/services/file.service';
@@ -61,7 +64,14 @@ export const DocumentAttachments = ({
   documentId,
 }: DocumentAttachmentsProps) => {
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: files, isLoading, isError } = useDocumentFiles(documentId);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadState, setUploadState] = useState<{
+    fileName: string;
+    progress: number;
+  } | null>(null);
 
   // ua: локал стейт для збереження URL картинки та яка передається через лайтбокс
   const [activePreviewImage, setActivePreviewImage] = useState<{
@@ -95,9 +105,61 @@ export const DocumentAttachments = ({
     if (isImage) {
       setActivePreviewImage({ url: fileUrl, name: fileName });
     } else {
-      // інший файл - відкриваємо/скачуємо в новій вкладці через р2 лінк
+      // інший файл - відкриваємо/скачуємо v новій вкладці через р2 лінк
       window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const processFiles = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const file = fileList[0];
+
+    const validation = validateUploadedFile(file);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Помилка валідації файлу');
+      return;
+    }
+
+    setUploadState({ fileName: file.name, progress: 0 });
+
+    try {
+      await fileService.uploadFile(documentId, file, (percent) => {
+        setUploadState((prev) =>
+          prev ? { ...prev, progress: percent } : null,
+        );
+      });
+
+      toast.success('Файл успішно завантажено');
+      queryClient.invalidateQueries({
+        queryKey: ['document-files', documentId],
+      });
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error('Не вдалося завантажити файл');
+    } finally {
+      setUploadState(null);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!uploadState) setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (!uploadState) {
+      processFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleTriggerFileInput = () => {
+    if (!uploadState) fileInputRef.current?.click();
   };
 
   if (isLoading) {
@@ -122,20 +184,82 @@ export const DocumentAttachments = ({
 
   return (
     <div className="pt-8 border-t border-border/40 text-left space-y-4 w-full animate-in fade-in duration-300">
-      <div className="flex items-center gap-2 text-sm font-bold text-foreground/90">
-        <FontAwesomeIcon
-          icon={faPaperclip}
-          className="h-3.5 w-3.5 text-muted-foreground/70"
-        />
-        <span>Attachments</span>
-        {files && files.length > 0 && (
-          <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground font-semibold">
-            {files.length}
-          </span>
-        )}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => processFiles(e.target.files)}
+        className="hidden"
+        disabled={!!uploadState}
+      />
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-sm font-bold text-foreground/90">
+          <FontAwesomeIcon
+            icon={faPaperclip}
+            className="h-3.5 w-3.5 text-muted-foreground/70"
+          />
+          <span>Attachments</span>
+          {files && files.length > 0 && (
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground font-semibold">
+              {files.length}
+            </span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          disabled={!!uploadState}
+          onClick={handleTriggerFileInput}
+          className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FontAwesomeIcon
+            icon={faArrowUpFromBracket}
+            className="text-[11px]"
+          />
+          <span>Upload File</span>
+        </button>
       </div>
 
-      {(!files || files.length === 0) && (
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={handleTriggerFileInput}
+        className={`w-full min-h-[110px] rounded-xl border border-dashed flex flex-col items-center justify-center p-6 gap-2 transition-all duration-200 cursor-pointer select-none ${
+          isDragging
+            ? 'border-primary bg-primary/5 scale-[0.995] shadow-inner'
+            : 'border-border/60 bg-background/20 hover:border-primary/30 hover:bg-accent/10'
+        }`}
+      >
+        <div
+          className={`h-8 w-8 rounded-lg flex items-center justify-center transition-transform duration-200 ${
+            isDragging ? 'text-primary scale-110' : 'text-muted-foreground/50'
+          }`}
+        >
+          <FontAwesomeIcon icon={faArrowUpFromBracket} className="h-4 w-4" />
+        </div>
+        <div className="text-center space-y-0.5">
+          <p className="text-xs font-bold text-foreground/80">
+            {isDragging
+              ? 'Drop file here to upload'
+              : 'Drag and drop file here, or click to browse'}
+          </p>
+          <p className="text-[10px] text-muted-foreground font-medium">
+            Any format up to 10 MB (banned executables: .exe, .bat)
+          </p>
+        </div>
+      </div>
+
+      {uploadState && (
+        <div className="flex justify-start pt-1">
+          <UploadProgress
+            fileName={uploadState.fileName}
+            progress={uploadState.progress}
+          />
+        </div>
+      )}
+
+      {(!files || files.length === 0) && !uploadState && (
         <p className="text-xs italic text-muted-foreground/60 pl-1">
           No files attached to this document yet.
         </p>
