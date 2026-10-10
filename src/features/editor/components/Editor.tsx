@@ -4,6 +4,10 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import Image from '@tiptap/extension-image';
+import { fileService } from '@/services/file.service';
+import { convertBase64ToFile } from '@/utils/base64-converter';
+import { toast } from 'sonner';
 
 // component
 import { Toolbar } from './Toolbar';
@@ -20,6 +24,7 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
   const editor = useEditor({
     // configuring the editor with extensions and initial content
 
+    // types
     // Heading, Bold, Italic - StarterKit
     extensions: [
       StarterKit.configure({
@@ -33,6 +38,14 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
       Placeholder.configure({
         placeholder: 'Please start typing your text here...',
       }),
+
+      // ua: підключаємо розширення зображень із базовою стилізацією класів Tailwind
+      Image.configure({
+        HTMLAttributes: {
+          class:
+            'max-w-full h-auto rounded-xl mx-auto border border-border/40 my-4 shadow-sm select-none',
+        },
+      }),
     ],
     // content for the editor
     content: initialContent,
@@ -44,6 +57,93 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
       onContentChange(currentHTML, isDirty);
     },
   });
+
+  // update, ua: функція для завантаження та вставки зображення в редактор
+  const uploadAndInsertImage = async (file: File) => {
+    if (!editor) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Allow only images to be uploaded (PNG, JPG, WebP...)');
+      return;
+    }
+
+    const toastId = toast.loading(`Uploading image: ${file.name}...`);
+
+    try {
+      const uploadedFile = await fileService.uploadFile(
+        'inline-editor-image',
+        file,
+        () => {},
+      );
+
+      editor
+        .chain()
+        .focus()
+        .setImage({ src: uploadedFile.url, alt: file.name })
+        .run();
+      toast.success('Image inserted successfully', { id: toastId });
+    } catch (error) {
+      console.error('Failed to upload inline image:', error);
+      toast.error('Failed to upload image to text', { id: toastId });
+    }
+  };
+
+  // update: ua: додавання обробників подій для перетягування та вставки зображень у редактор
+  if (editor && !editor.options.editorProps.handleDrop) {
+    editor.setOptions({
+      editorProps: {
+        handleDrop: (view, event) => {
+          if (
+            event.dataTransfer &&
+            event.dataTransfer.files &&
+            event.dataTransfer.files.length > 0
+          ) {
+            const files = Array.from(event.dataTransfer.files);
+            const imageFile = files.find((file) =>
+              file.type.startsWith('image/'),
+            );
+
+            if (imageFile) {
+              event.preventDefault();
+              uploadAndInsertImage(imageFile);
+              return true;
+            }
+          }
+          return false;
+        },
+        handlePaste: (view, event) => {
+          const items = Array.from(event.clipboardData?.items || []);
+
+          const imageItem = items.find((item) =>
+            item.type.startsWith('image/'),
+          );
+          if (imageItem) {
+            const file = imageItem.getAsFile();
+            if (file) {
+              event.preventDefault();
+              uploadAndInsertImage(file);
+              return true;
+            }
+          }
+
+          const textData = event.clipboardData?.getData('text/plain') || '';
+          if (
+            textData.startsWith('data:image/') &&
+            textData.includes(';base64,')
+          ) {
+            const fileFromBase64 = convertBase64ToFile(textData);
+            if (fileFromBase64) {
+              event.preventDefault();
+              uploadAndInsertImage(fileFromBase64);
+              return true;
+            }
+          }
+
+          return false;
+        },
+      },
+    });
+  }
 
   useEffect(() => {
     if (!editor) return;
