@@ -8,9 +8,14 @@
 import { useEffect, useState } from 'react';
 import { CreateFolderModal } from '@/components/modals/CreateFolderModal';
 import { DeleteCategoryConfirmModal } from '@/components/modals/DeleteCategoryConfirmModal';
+// ua: модалки для документів
 import { CreateDocumentModal } from '@/components/modals/CreateDocumentModal';
 import { DeleteDocumentConfirmModal } from '@/components/modals/DeleteDocumentConfirmModal';
+// revision history modal - document versions
 import { RevisionHistorySidebar } from '@/components/modals/RevisionHistorySidebar';
+// kanban modals
+import { EditTaskModal } from '@/components/modals/EditTaskModal';
+import { CreateTaskModal } from '@/components/modals/CreateTaskModal';
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -37,6 +42,8 @@ export const ModalProvider = () => {
       <CreateDocumentModal />
       <DeleteDocumentConfirmModal />
       <RevisionHistorySidebar />
+      <CreateTaskModal />
+      <EditTaskModal />
     </>
   );
 };
