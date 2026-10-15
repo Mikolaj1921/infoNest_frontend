@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { DocumentRevision } from '@/types/document';
+import { BoardTask } from '@/types/kanban';
 
 // ua: типи модальних вікон
 export type ModalType =
@@ -9,7 +10,9 @@ export type ModalType =
   | 'deleteCategory'
   | 'createDocument'
   | 'deleteDocument'
-  | 'revisionHistory';
+  | 'revisionHistory'
+  | 'createBoardTask' // ua: апдейт - тип для створення завдання
+  | 'editBoardTask'; // ua: апдейт - тип для редагування завдання
 
 // ua: інтерфейс даних
 interface ModalData {
@@ -21,6 +24,10 @@ interface ModalData {
   documentId?: string;
   documentTitle?: string;
   onSelectRevision?: (revision: DocumentRevision) => void; // колбек для вибору версії документа
+
+  // ua: дані для канбан-задач
+  columnId?: string; // для створення таски всередині конкретної колонки
+  task?: BoardTask; // для наповнення полів форми при редагуванні
 }
 
 // ua: інтерфейс стану модального вікна
