@@ -54,3 +54,31 @@ export const useCreateTask = (workspaceId: string) => {
     },
   });
 };
+
+// ua хук для збереження змін при редагуванні картки завдання
+export const useUpdateTask = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      payload,
+    }: {
+      taskId: string;
+      payload: {
+        title: string;
+        description: string;
+        priority: 'LOW' | 'MEDIUM' | 'HIGH';
+      };
+    }) => taskService.updateTask(taskId, payload),
+    onSuccess: () => {
+      toast.success('Зміни успішно збережено');
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-kanban', workspaceId],
+      });
+    },
+    onError: () => {
+      toast.error('Не вдалося зберегти зміни');
+    },
+  });
+};

@@ -43,6 +43,22 @@ export const taskService = {
     return data.data.task;
   },
 
+  // ua: оновлення картки задачі
+  updateTask: async (
+    taskId: string,
+    payload: {
+      title: string;
+      description: string;
+      priority: 'LOW' | 'MEDIUM' | 'HIGH';
+    },
+  ): Promise<BoardTask> => {
+    const { data } = await api.patch<BoardTaskResponse>(
+      `/board-tasks/${taskId}`,
+      payload,
+    );
+    return data.data.task;
+  },
+
   // ua: оновлення позицій масиву задач при перетягуванні (drag and drop)
   reorderTasks: async (
     workspaceId: string,
