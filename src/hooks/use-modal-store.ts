@@ -12,7 +12,8 @@ export type ModalType =
   | 'deleteDocument'
   | 'revisionHistory'
   | 'createBoardTask' // ua: апдейт - тип для створення завдання
-  | 'editBoardTask'; // ua: апдейт - тип для редагування завдання
+  | 'editBoardTask' // ua: апдейт - тип для редагування завдання
+  | 'createTaskColumn';
 
 // ua: інтерфейс даних
 interface ModalData {

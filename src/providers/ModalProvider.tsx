@@ -16,6 +16,7 @@ import { RevisionHistorySidebar } from '@/components/modals/RevisionHistorySideb
 // kanban modals
 import { EditTaskModal } from '@/components/modals/EditTaskModal';
 import { CreateTaskModal } from '@/components/modals/CreateTaskModal';
+import { CreateTaskColumnModal } from '@/components/modals/CreateTaskColumnModal';
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -42,8 +43,10 @@ export const ModalProvider = () => {
       <CreateDocumentModal />
       <DeleteDocumentConfirmModal />
       <RevisionHistorySidebar />
+      {/*kanban modals*/}
       <CreateTaskModal />
       <EditTaskModal />
+      <CreateTaskColumnModal />
     </>
   );
 };

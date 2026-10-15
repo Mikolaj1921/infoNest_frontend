@@ -11,16 +11,18 @@ import {
 import {
   useWorkspaceKanban,
   useCreateColumn,
-  useCreateTask,
+  //useCreateTask,
 } from '@/hooks/useKanbanData';
 import { BoardColumn } from '@/features/kanban/components/BoardColumn';
+import { useModal } from '@/hooks/use-modal-store';
 
-// ua: Головний компонент сторінки воркспейсу. Ключове слово export default є ОБОВ'ЯЗКОВИМ!
 export default function WorkspacePage() {
   const params = useParams();
+  const { onOpen } = useModal(); // global modal store for opening modals
+
   const workspaceId = typeof params?.id === 'string' ? params.id : '';
 
-  // ua: Локальний стейт для керування активною вкладкою (Документи або Задачі)
+  // local state to manage the active tab between doc & kanban view
   const [activeTab, setActiveTab] = useState<'documents' | 'kanban'>(
     'documents',
   );
@@ -28,14 +30,11 @@ export default function WorkspacePage() {
   // ua: Завантаження даних дошки та мутації через TanStack Query хуки фічі
   const { data: categories, isLoading } = useWorkspaceKanban(workspaceId);
   const createColumnMutation = useCreateColumn(workspaceId);
-  const createTaskMutation = useCreateTask(workspaceId);
+  //const createTaskMutation = useCreateTask(workspaceId);
 
-  // ua: Функція швидкого створення нової колонки через prompt вікно браузера
+  // update: handle opening the modal for creating a new task column
   const handleAddColumn = () => {
-    const columnName = prompt('Введіть назву для нової колонки задач:');
-    if (columnName && columnName.trim()) {
-      createColumnMutation.mutate(columnName.trim());
-    }
+    onOpen('createTaskColumn');
   };
 
   return (
@@ -74,11 +73,10 @@ export default function WorkspacePage() {
         </div>
       </div>
 
-      {/* --- РЕЖИМ 1: СТАНДАРТНЕ ВІДОБРАЖЕННЯ ДОКУМЕНТІВ (ТВОЯ ЗАГЛУШКА) --- */}
+      {/* ua: Відображення вкладки документів - заглушка */}
       {activeTab === 'documents' && (
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <div className="max-w-md space-y-4">
-            {/* Красива заглушка робочої зони воркспейсу */}
             <div className="mx-auto h-12 w-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
               <FontAwesomeIcon icon={faFolderOpen} className="h-5 w-5" />
             </div>
@@ -96,7 +94,7 @@ export default function WorkspacePage() {
         </div>
       )}
 
-      {/* --- РЕЖИМ 2: СУЧАСНИЙ ГОРИЗОНТАЛЬНИЙ LAYOUT КАНБАН-ДОШКИ --- */}
+      {/* ua: Відображення вкладки канбан - заглушка */}
       {activeTab === 'kanban' && (
         <div className="flex-1 flex flex-col min-h-0 space-y-4 text-left">
           <div className="flex items-center justify-between">
@@ -114,7 +112,7 @@ export default function WorkspacePage() {
             </button>
           </div>
 
-          {/* ua: Горизонтальний скрол-контейнер для відображення колонок фічі канбану */}
+          {/* ua: скрол-контейнер для відображення колонок фічі канбану */}
           <div className="flex-1 overflow-x-auto pb-4 flex items-start gap-4 select-none min-h-[450px] scrollbar-thin scrollbar-thumb-border/60">
             {isLoading ? (
               <div className="text-xs font-medium text-muted-foreground animate-pulse p-2">
@@ -126,14 +124,8 @@ export default function WorkspacePage() {
                   key={col.id}
                   column={col}
                   onAddTask={(columnId) => {
-                    const title = prompt('Enter task title:');
-                    if (title && title.trim()) {
-                      createTaskMutation.mutate({
-                        title: title.trim(),
-                        columnId,
-                        workspaceId,
-                      });
-                    }
+                    // modal store
+                    onOpen('createBoardTask', { columnId });
                   }}
                 />
               ))
