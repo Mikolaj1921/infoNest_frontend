@@ -46,6 +46,7 @@ export const taskService = {
   // ua: оновлення картки задачі
   updateTask: async (
     taskId: string,
+    workspaceId: string,
     payload: {
       title: string;
       description: string;
@@ -53,7 +54,7 @@ export const taskService = {
     },
   ): Promise<BoardTask> => {
     const { data } = await api.patch<BoardTaskResponse>(
-      `/board-tasks/${taskId}`,
+      `/board-tasks/${taskId}?workspaceId=${workspaceId}`, // передача workspaceId в арг
       payload,
     );
     return data.data.task;
@@ -70,7 +71,7 @@ export const taskService = {
     });
   },
 
-  deleteTask: async (taskId: string): Promise<void> => {
-    await api.delete(`/board-tasks/${taskId}`);
+  deleteTask: async (taskId: string, workspaceId: string): Promise<void> => {
+    await api.delete(`/board-tasks/${taskId}?workspaceId=${workspaceId}`); // аналогічно як з апдейтами
   },
 };

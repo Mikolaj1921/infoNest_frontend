@@ -5,14 +5,17 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useModal } from '@/hooks/use-modal-store';
-import { useUpdateTask } from '@/hooks/useKanbanData'; // ua: імпортуємо хук оновлення
+import { useUpdateTask, useDeleteTask } from '@/hooks/useKanbanData'; // ua: хуки оновлення та видалення
 import { useParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import {
+  faXmark,
+  faSpinner,
+  faTrashCan,
+} from '@fortawesome/free-solid-svg-icons';
 
-// ua: сувора схема валідації полів із обов'язковим enum
 const editTaskSchema = z.object({
-  title: z.string().min(1, 'Назва завдання є обов’язковою').max(200),
+  title: z.string().min(1, 'Task name is required').max(200),
   description: z.string().default(''),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
 });
@@ -30,6 +33,7 @@ export const EditTaskModal = () => {
   const { task } = data; // ua: витягуємо поточну таску для редагування
 
   const updateTaskMutation = useUpdateTask(workspaceId);
+  const deleteTaskMutation = useDeleteTask(workspaceId);
 
   // ua: хендлер для сабміту форми редагування задачі (fix: поправлено типізацію)
   const {
@@ -77,6 +81,22 @@ export const EditTaskModal = () => {
     );
   };
 
+  // ua: хендлер для видалення таски з підтвердженням
+  const handleDelete = () => {
+    if (!task) return;
+
+    const confirmDelete = window.confirm(
+      'Ви впевнені, що хочете видалити це завдання?',
+    );
+    if (confirmDelete) {
+      deleteTaskMutation.mutate(task.id, {
+        onSuccess: () => {
+          onClose();
+        },
+      });
+    }
+  };
+
   if (!isModalOpen || !task) return null;
 
   return (
@@ -106,7 +126,9 @@ export const EditTaskModal = () => {
             <input
               {...register('title')}
               type="text"
-              disabled={updateTaskMutation.isPending}
+              disabled={
+                updateTaskMutation.isPending || deleteTaskMutation.isPending
+              }
               className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition"
             />
             {errors.title && (
@@ -122,7 +144,9 @@ export const EditTaskModal = () => {
             </label>
             <textarea
               {...register('description')}
-              disabled={updateTaskMutation.isPending}
+              disabled={
+                updateTaskMutation.isPending || deleteTaskMutation.isPending
+              }
               rows={3}
               className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition resize-none"
             />
@@ -134,8 +158,10 @@ export const EditTaskModal = () => {
             </label>
             <select
               {...register('priority')}
-              disabled={updateTaskMutation.isPending}
-              className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition"
+              disabled={
+                updateTaskMutation.isPending || deleteTaskMutation.isPending
+              }
+              className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition cursor-pointer"
             >
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -143,29 +169,56 @@ export const EditTaskModal = () => {
             </select>
           </div>
 
-          {/* дії - кнопки */}
-          <div className="flex items-center justify-end gap-2.5 pt-2">
+          {/* ua: дії - кнопки */}
+          <div className="flex items-center justify-between gap-2.5 pt-2 border-t border-border/20">
+            {/* button to delete task */}
             <button
               type="button"
-              onClick={onClose}
-              disabled={updateTaskMutation.isPending}
-              className="rounded-xl border border-border/60 px-4 py-2 text-xs font-bold text-foreground hover:bg-accent/50 transition cursor-pointer"
+              onClick={handleDelete}
+              disabled={
+                updateTaskMutation.isPending || deleteTaskMutation.isPending
+              }
+              className="h-9 px-3 rounded-xl border border-destructive/30 hover:border-destructive bg-destructive/5 hover:bg-destructive/10 text-destructive text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+              title="Delete task"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={updateTaskMutation.isPending}
-              className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition cursor-pointer shadow-sm disabled:opacity-50"
-            >
-              {updateTaskMutation.isPending && (
+              {deleteTaskMutation.isPending ? (
                 <FontAwesomeIcon
                   icon={faSpinner}
-                  className="h-3 w-3 animate-spin"
+                  className="h-3.5 w-3.5 animate-spin"
                 />
+              ) : (
+                <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" />
               )}
-              <span>Saved changes</span>
+              <span>Delete</span>
             </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={
+                  updateTaskMutation.isPending || deleteTaskMutation.isPending
+                }
+                className="rounded-xl border border-border/60 px-4 py-2 text-xs font-bold text-foreground hover:bg-accent/50 transition cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  updateTaskMutation.isPending || deleteTaskMutation.isPending
+                }
+                className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition cursor-pointer shadow-sm disabled:opacity-50"
+              >
+                {updateTaskMutation.isPending && (
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    className="h-3 w-3 animate-spin"
+                  />
+                )}
+                <span>Saved changes</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>

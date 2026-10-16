@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { BoardTask, TaskPriority } from '@/types/kanban';
+import { useModal } from '@/hooks/use-modal-store';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faCircle } from '@fortawesome/free-solid-svg-icons';
 
@@ -31,12 +32,18 @@ const getPriorityStyles = (priority: TaskPriority) => {
 };
 
 export const TaskCard = ({ task }: TaskCardProps) => {
+  // --- ua: SUB-TASK 4: підключаємо тригер відкриття модалок ---
+  const { onOpen } = useModal();
   const priority = getPriorityStyles(task.priority);
 
   return (
-    <div className="group relative flex flex-col rounded-xl border border-border/50 bg-background/60 p-3.5 space-y-3 hover:border-primary/30 hover:bg-accent/10 transition-all duration-200 cursor-pointer shadow-sm animate-in fade-in duration-200 select-none">
+    <div
+      // --- ua: SUB-TASK 4: при кліку на картку передаємо об'єкт задачі у стор для редагування ---
+      onClick={() => onOpen('editBoardTask', { task })}
+      className="group relative flex flex-col rounded-xl border border-border/50 bg-background/60 p-3.5 space-y-3 hover:border-primary/30 hover:bg-accent/10 transition-all duration-200 cursor-pointer shadow-sm animate-in fade-in duration-200 select-none text-left"
+    >
       {/* Заголовок та пріоритет таски */}
-      <div className="space-y-1.5 text-left">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <span
             className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold ${priority.bg}`}
@@ -50,9 +57,9 @@ export const TaskCard = ({ task }: TaskCardProps) => {
         </h4>
       </div>
 
-      {/* Опис задачі (якщо є) */}
+      {/* --- ua: SUB-TASK 2: виведення реального тексту опису з бази замість заглушки --- */}
       {task.description && (
-        <p className="text-[11px] text-muted-foreground/70 text-left line-clamp-2 leading-relaxed">
+        <p className="text-[11px] text-muted-foreground/70 line-clamp-2 leading-relaxed">
           {task.description}
         </p>
       )}
@@ -64,11 +71,10 @@ export const TaskCard = ({ task }: TaskCardProps) => {
           <span>
             {task.dueDate
               ? new Date(task.dueDate).toLocaleDateString('uk-UA')
-              : 'Without deadline'}
+              : 'No due date'}
           </span>
         </div>
 
-        {/* Компактний аватар виконавця */}
         <div className="h-5 w-5 rounded-full bg-secondary/80 border border-border/50 flex items-center justify-center font-bold text-[9px] text-foreground/80 shrink-0">
           U
         </div>

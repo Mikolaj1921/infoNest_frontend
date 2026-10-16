@@ -1,4 +1,4 @@
-// ua: модалка для створення нової задачі в канбан-дошці
+// ua: мокалка для створення нової задачі в канбан-дошці
 
 'use client';
 
@@ -14,8 +14,8 @@ import { faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 // ua: клієнтська схема валідації полів через бібліотеку zod
 const taskSchema = z.object({
-  title: z.string().min(1, 'Назва завдання є обов’язковою').max(200),
-  description: z.string().optional(),
+  title: z.string().min(1, 'Title is required').max(200),
+  description: z.string().default(''),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
 });
 
@@ -52,9 +52,12 @@ export const CreateTaskModal = () => {
   const onSubmit = async (values: TaskFormValues) => {
     if (!columnId) return;
 
+    // ua: фул набір метаданих на серв для створення нової задачі
     createTaskMutation.mutate(
       {
         title: values.title.trim(),
+        description: values.description.trim(),
+        priority: values.priority,
         columnId,
         workspaceId,
       },
@@ -75,7 +78,7 @@ export const CreateTaskModal = () => {
         className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl space-y-4 animate-in zoom-in-95 duration-200 text-left"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Шапка модалки */}
+        {/* header */}
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-foreground">
             Create New Task
@@ -93,13 +96,13 @@ export const CreateTaskModal = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-foreground/80">
-              New Task
+              Task Name
             </label>
             <input
               {...register('title')}
               type="text"
               disabled={createTaskMutation.isPending}
-              placeholder="Напр., Реалізувати мідлвар ролей..."
+              placeholder="E.g., Implement role middleware..."
               className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition"
             />
             {errors.title && (
@@ -116,10 +119,26 @@ export const CreateTaskModal = () => {
             <textarea
               {...register('description')}
               disabled={createTaskMutation.isPending}
-              placeholder="Додайте деталі завдання тут..."
+              placeholder="Add task details here..."
               rows={3}
               className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition resize-none"
             />
+          </div>
+
+          {/* апдейт: кастомний селект для вибору рівня пріоритету завдання */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-foreground/80">
+              Priority
+            </label>
+            <select
+              {...register('priority')}
+              disabled={createTaskMutation.isPending}
+              className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition cursor-pointer text-foreground/90"
+            >
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
           </div>
 
           {/* Кнопки дій */}
@@ -130,7 +149,7 @@ export const CreateTaskModal = () => {
               disabled={createTaskMutation.isPending}
               className="rounded-xl border border-border/60 px-4 py-2 text-xs font-bold text-foreground hover:bg-accent/50 transition cursor-pointer"
             >
-              Скасувати
+              Cancel
             </button>
             <button
               type="submit"

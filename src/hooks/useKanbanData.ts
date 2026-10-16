@@ -72,7 +72,7 @@ export const useUpdateTask = (workspaceId: string) => {
         description: string;
         priority: 'LOW' | 'MEDIUM' | 'HIGH';
       };
-    }) => taskService.updateTask(taskId, payload),
+    }) => taskService.updateTask(taskId, workspaceId, payload),
     onSuccess: () => {
       toast.success('Зміни успішно збережено');
       queryClient.invalidateQueries({
@@ -90,7 +90,7 @@ export const useDeleteTask = (workspaceId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (taskId: string) => taskService.deleteTask(taskId),
+    mutationFn: (taskId: string) => taskService.deleteTask(taskId, workspaceId),
     onSuccess: () => {
       toast.success('Завдання успішно видалено');
       queryClient.invalidateQueries({
