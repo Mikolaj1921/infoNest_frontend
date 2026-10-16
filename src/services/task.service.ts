@@ -37,7 +37,7 @@ export const taskService = {
     description?: string;
     columnId: string;
     workspaceId: string;
-    priority?: string;
+    priority: 'LOW' | 'MEDIUM' | 'HIGH';
   }): Promise<BoardTask> => {
     const { data } = await api.post<BoardTaskResponse>('/board-tasks', payload);
     return data.data.task;
@@ -68,5 +68,9 @@ export const taskService = {
       workspaceId,
       tasks,
     });
+  },
+
+  deleteTask: async (taskId: string): Promise<void> => {
+    await api.delete(`/board-tasks/${taskId}`);
   },
 };

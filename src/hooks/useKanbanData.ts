@@ -40,8 +40,10 @@ export const useCreateTask = (workspaceId: string) => {
   return useMutation({
     mutationFn: (payload: {
       title: string;
+      description: string;
       columnId: string;
       workspaceId: string;
+      priority: 'LOW' | 'MEDIUM' | 'HIGH';
     }) => taskService.createTask(payload),
     onSuccess: () => {
       toast.success('Task successfully created');
@@ -79,6 +81,24 @@ export const useUpdateTask = (workspaceId: string) => {
     },
     onError: () => {
       toast.error('Не вдалося зберегти зміни');
+    },
+  });
+};
+
+// ua хук для видалення картки завдання
+export const useDeleteTask = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (taskId: string) => taskService.deleteTask(taskId),
+    onSuccess: () => {
+      toast.success('Завдання успішно видалено');
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-kanban', workspaceId],
+      });
+    },
+    onError: () => {
+      toast.error('Не вдалося видалити завдання');
     },
   });
 };
