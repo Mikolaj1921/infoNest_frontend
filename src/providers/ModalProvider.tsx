@@ -17,6 +17,8 @@ import { RevisionHistorySidebar } from '@/components/modals/RevisionHistorySideb
 import { EditTaskModal } from '@/components/modals/EditTaskModal';
 import { CreateTaskModal } from '@/components/modals/CreateTaskModal';
 import { CreateTaskColumnModal } from '@/components/modals/CreateTaskColumnModal';
+import { EditTaskColumnModal } from '@/components/modals/EditTaskColumnModal';
+import { DeleteTaskConfirmationModal } from '@/components/modals/DeleteTaskConfirmationModal';
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -47,6 +49,8 @@ export const ModalProvider = () => {
       <CreateTaskModal />
       <EditTaskModal />
       <CreateTaskColumnModal />
+      <EditTaskColumnModal />
+      <DeleteTaskConfirmationModal />
     </>
   );
 };

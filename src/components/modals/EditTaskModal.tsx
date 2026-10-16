@@ -28,7 +28,7 @@ export const EditTaskModal = () => {
   const params = useParams();
   const workspaceId = typeof params?.id === 'string' ? params.id : '';
 
-  const { isOpen, type, data, onClose } = useModal();
+  const { isOpen, type, data, onClose, onOpen } = useModal();
   const isModalOpen = isOpen && type === 'editBoardTask';
   const { task } = data; // ua: витягуємо поточну таску для редагування
 
@@ -85,16 +85,18 @@ export const EditTaskModal = () => {
   const handleDelete = () => {
     if (!task) return;
 
-    const confirmDelete = window.confirm(
-      'Ви впевнені, що хочете видалити це завдання?',
-    );
-    if (confirmDelete) {
-      deleteTaskMutation.mutate(task.id, {
-        onSuccess: () => {
-          onClose();
-        },
-      });
-    }
+    onOpen('confirmDeleteTask', {
+      confirmTitle: 'Delete Task?',
+      confirmDescription: `Are you sure you want to delete the task "${task.title}"?`,
+      onConfirm: async () => {
+        return new Promise<void>((resolve, reject) => {
+          deleteTaskMutation.mutate(task.id, {
+            onSuccess: () => resolve(),
+            onError: (err) => reject(err),
+          });
+        });
+      },
+    });
   };
 
   if (!isModalOpen || !task) return null;

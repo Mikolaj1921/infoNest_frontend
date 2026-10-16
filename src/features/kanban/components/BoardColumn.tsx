@@ -5,6 +5,8 @@ import { TaskCategory } from '@/types/kanban';
 import { TaskCard } from './TaskCard';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
+// modals
+import { useModal } from '@/hooks/use-modal-store';
 
 interface BoardColumnProps {
   column: TaskCategory;
@@ -12,10 +14,11 @@ interface BoardColumnProps {
 }
 
 export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
+  const { onOpen } = useModal();
+
   return (
     <div className="w-72 shrink-0 bg-secondary/20 rounded-2xl border border-border/40 p-3.5 flex flex-col max-h-[calc(100vh-220px)] animate-in fade-in duration-300 text-left">
-      {/* Шапка колонки: назва, лічильник та опції */}
-      <div className="flex items-center justify-between gap-3 pb-2.5 mb-3 border-b border-border/30">
+      <div className="flex items-center justify-between gap-3 pb-2.5 mb-3 border-b border-b-border/30">
         <div className="flex items-center gap-2 min-w-0">
           <h3
             className="text-xs font-bold text-foreground/90 truncate"
@@ -28,16 +31,23 @@ export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
           </span>
         </div>
 
-        {/* ua: Кнопка опцій колонки (майбутній виклик перейменування/видалення стовпця) */}
+        {/* --- ua: ПОВЕРНУТО ІКОНКУ ТРЬОХ КРАПОК З ВИКЛИКОМ СУЧАСНОЇ МОДАЛКИ КЕРУВАННЯ --- */}
         <button
           type="button"
+          onClick={() =>
+            onOpen('editTaskColumn', {
+              columnId: column.id,
+              columnName: column.name,
+            })
+          }
           className="h-6 w-6 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 flex items-center justify-center transition shrink-0 cursor-pointer"
+          title="Опції колонки"
         >
           <FontAwesomeIcon icon={faEllipsisVertical} className="h-3 w-3" />
         </button>
       </div>
 
-      {/* Вертикальна стрічка карток задач */}
+      {/* Vertical task feed */}
       <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5 scrollbar-thin scrollbar-thumb-border/40">
         {column.boardTasks && column.boardTasks.length > 0 ? (
           column.boardTasks.map((task) => (
@@ -50,7 +60,7 @@ export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
         )}
       </div>
 
-      {/* Нижня кнопка швидкого створення таски в цій колонці */}
+      {/* Create task button */}
       <button
         type="button"
         onClick={() => onAddTask(column.id)}

@@ -120,3 +120,22 @@ export const useDeleteColumn = (workspaceId: string) => {
     },
   });
 };
+
+// ua: хук для оновлення назви колонки задач
+export const useUpdateColumn = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ columnId, name }: { columnId: string; name: string }) =>
+      taskService.updateColumn(columnId, workspaceId, name),
+    onSuccess: () => {
+      toast.success('Name of the column successfully changed');
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-kanban', workspaceId],
+      });
+    },
+    onError: () => {
+      toast.error('Failed to change the name of the column');
+    },
+  });
+};

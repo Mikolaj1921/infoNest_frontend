@@ -13,7 +13,9 @@ export type ModalType =
   | 'revisionHistory'
   | 'createBoardTask' // ua: апдейт - тип для створення завдання
   | 'editBoardTask' // ua: апдейт - тип для редагування завдання
-  | 'createTaskColumn';
+  | 'createTaskColumn'
+  | 'editTaskColumn'
+  | 'confirmDeleteTask';
 
 // ua: інтерфейс даних
 interface ModalData {
@@ -28,7 +30,12 @@ interface ModalData {
 
   // ua: дані для канбан-задач
   columnId?: string; // для створення таски всередині конкретної колонки
+  columnName?: string; // для редагування назви колонки
   task?: BoardTask; // для наповнення полів форми при редагуванні
+
+  confirmTitle?: string;
+  confirmDescription?: string;
+  onConfirm?: () => void;
 }
 
 // ua: інтерфейс стану модального вікна

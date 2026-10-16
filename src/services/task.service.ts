@@ -81,4 +81,16 @@ export const taskService = {
   ): Promise<void> => {
     await api.delete(`/task-categories/${columnId}?workspaceId=${workspaceId}`);
   },
+
+  updateColumn: async (
+    columnId: string,
+    workspaceId: string,
+    name: string,
+  ): Promise<TaskCategory> => {
+    const { data } = await api.patch<TaskCategoryResponse>(
+      `/task-categories/${columnId}?workspaceId=${workspaceId}`,
+      { name },
+    );
+    return data.data.category;
+  },
 };
