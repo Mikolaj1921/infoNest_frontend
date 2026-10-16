@@ -74,4 +74,11 @@ export const taskService = {
   deleteTask: async (taskId: string, workspaceId: string): Promise<void> => {
     await api.delete(`/board-tasks/${taskId}?workspaceId=${workspaceId}`); // аналогічно як з апдейтами
   },
+
+  deleteColumn: async (
+    columnId: string,
+    workspaceId: string,
+  ): Promise<void> => {
+    await api.delete(`/task-categories/${columnId}?workspaceId=${workspaceId}`);
+  },
 };

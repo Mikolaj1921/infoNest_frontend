@@ -74,13 +74,13 @@ export const useUpdateTask = (workspaceId: string) => {
       };
     }) => taskService.updateTask(taskId, workspaceId, payload),
     onSuccess: () => {
-      toast.success('Зміни успішно збережено');
+      toast.success('Changes successfully saved');
       queryClient.invalidateQueries({
         queryKey: ['workspace-kanban', workspaceId],
       });
     },
     onError: () => {
-      toast.error('Не вдалося зберегти зміни');
+      toast.error('Failed to save changes');
     },
   });
 };
@@ -92,13 +92,31 @@ export const useDeleteTask = (workspaceId: string) => {
   return useMutation({
     mutationFn: (taskId: string) => taskService.deleteTask(taskId, workspaceId),
     onSuccess: () => {
-      toast.success('Завдання успішно видалено');
+      toast.success('Task successfully deleted');
       queryClient.invalidateQueries({
         queryKey: ['workspace-kanban', workspaceId],
       });
     },
     onError: () => {
-      toast.error('Не вдалося видалити завдання');
+      toast.error('Failed to delete task');
+    },
+  });
+};
+
+export const useDeleteColumn = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (columnId: string) =>
+      taskService.deleteColumn(columnId, workspaceId),
+    onSuccess: () => {
+      toast.success('Column successfully deleted');
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-kanban', workspaceId],
+      });
+    },
+    onError: () => {
+      toast.error('Failed to delete column');
     },
   });
 };
