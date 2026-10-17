@@ -32,15 +32,13 @@ const getPriorityStyles = (priority: TaskPriority) => {
 };
 
 export const TaskCard = ({ task }: TaskCardProps) => {
-  // --- ua: SUB-TASK 4: підключаємо тригер відкриття модалок ---
   const { onOpen } = useModal();
   const priority = getPriorityStyles(task.priority);
 
   return (
     <div
-      // --- ua: SUB-TASK 4: при кліку на картку передаємо об'єкт задачі у стор для редагування ---
       onClick={() => onOpen('editBoardTask', { task })}
-      className="group relative flex flex-col rounded-xl border border-border/50 bg-background/60 p-3.5 space-y-3 hover:border-primary/30 hover:bg-accent/10 transition-all duration-200 cursor-pointer shadow-sm animate-in fade-in duration-200 select-none text-left"
+      className="group relative flex flex-col rounded-xl border border-border/50 bg-background/60 p-3.5 mt-2 mb-2 space-y-3 hover:border-primary/30 hover:bg-accent/10 transition-all duration-200 cursor-pointer shadow-sm animate-in fade-in duration-200 select-none text-left"
     >
       {/* Заголовок та пріоритет таски */}
       <div className="space-y-1.5">
@@ -57,13 +55,15 @@ export const TaskCard = ({ task }: TaskCardProps) => {
         </h4>
       </div>
 
-      {/* --- ua: SUB-TASK 2: виведення реального тексту опису з бази замість заглушки --- */}
+      {/* гua: description */}
       {task.description && (
-        <p className="text-[11px] text-muted-foreground/70 line-clamp-2 leading-relaxed">
+        <p
+          className="task-card-description text-[11px] text-muted-foreground/70 leading-relaxed"
+          title={task.description}
+        >
           {task.description}
         </p>
       )}
-
       {/* Нижня панель метаданих: дедлайн та виконавець */}
       <div className="flex items-center justify-between pt-1 border-t border-border/20 text-[10px] text-muted-foreground">
         <div className="flex items-center gap-1">

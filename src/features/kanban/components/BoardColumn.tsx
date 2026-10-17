@@ -18,7 +18,7 @@ export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
 
   return (
     <div className="w-72 shrink-0 bg-secondary/20 rounded-2xl border border-border/40 p-3.5 flex flex-col max-h-[calc(100vh-220px)] animate-in fade-in duration-300 text-left">
-      <div className="flex items-center justify-between gap-3 pb-2.5 mb-3 border-b border-b-border/30">
+      <div className="flex items-center justify-between gap-3 pb-2.5 ">
         <div className="flex items-center gap-2 min-w-0">
           <h3
             className="text-xs font-bold text-foreground/90 truncate"
@@ -31,7 +31,7 @@ export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
           </span>
         </div>
 
-        {/* --- ua: ПОВЕРНУТО ІКОНКУ ТРЬОХ КРАПОК З ВИКЛИКОМ СУЧАСНОЇ МОДАЛКИ КЕРУВАННЯ --- */}
+        {/* options */}
         <button
           type="button"
           onClick={() =>

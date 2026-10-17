@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -26,6 +26,7 @@ type EditTaskFormValues = z.output<typeof editTaskSchema>;
 
 export const EditTaskModal = () => {
   const params = useParams();
+
   const workspaceId = typeof params?.id === 'string' ? params.id : '';
 
   const { isOpen, type, data, onClose, onOpen } = useModal();
@@ -34,6 +35,8 @@ export const EditTaskModal = () => {
 
   const updateTaskMutation = useUpdateTask(workspaceId);
   const deleteTaskMutation = useDeleteTask(workspaceId);
+
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
   // ua: хендлер для сабміту форми редагування задачі (fix: поправлено типізацію)
   const {
@@ -50,6 +53,16 @@ export const EditTaskModal = () => {
     },
   });
 
+  // ua: хендлер для динамічного ресайзу textarea опису задачі
+  const resizeDescription = useCallback(() => {
+    const textarea = descriptionRef.current;
+
+    if (!textarea) return;
+
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, []);
+
   // ua: динамічно скидаємо та наповнюємо поля форми, коли користувач відкриває іншу таску
   useEffect(() => {
     if (task) {
@@ -61,6 +74,16 @@ export const EditTaskModal = () => {
     }
   }, [task, reset]);
 
+  // ua: динамічний ресайз textarea при відкритті модалки та зміні таски
+  useEffect(() => {
+    if (!isModalOpen || !task) return;
+
+    const frame = requestAnimationFrame(resizeDescription);
+
+    return () => cancelAnimationFrame(frame);
+  }, [isModalOpen, task, resizeDescription]);
+
+  // ua: хендлер для сабміту форми
   const onSubmit: SubmitHandler<EditTaskFormValues> = async (values) => {
     if (!task) return;
 
@@ -144,13 +167,19 @@ export const EditTaskModal = () => {
             <label className="text-xs font-bold text-foreground/80">
               Description
             </label>
+
             <textarea
               {...register('description')}
+              ref={(element) => {
+                register('description').ref(element);
+                descriptionRef.current = element;
+              }}
               disabled={
                 updateTaskMutation.isPending || deleteTaskMutation.isPending
               }
               rows={3}
-              className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition resize-none"
+              onInput={resizeDescription}
+              className="w-full min-h-[90px] rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs leading-relaxed focus:border-primary/40 focus:outline-hidden transition resize-none overflow-hidden"
             />
           </div>
 
