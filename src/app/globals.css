@@ -120,6 +120,7 @@
   color: hsl(var(--primary));
 }
 
+/* Task card description */
 .task-card-description {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -127,4 +128,32 @@
   line-clamp: 3;
   overflow: hidden;
   overflow-wrap: anywhere;
+}
+
+/* Горизонтальний скролбар Kanban-дошки */
+/* Горизонтальний скролбар Kanban-дошки */
+.kanban-board-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 transparent;
+}
+
+.kanban-board-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kanban-board-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-board-scroll::-webkit-scrollbar-thumb {
+  background-color: #6b7280;
+  border-radius: 9999px;
+}
+
+.kanban-board-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #374151;
+}
+
+.kanban-board-scroll::-webkit-scrollbar-corner {
+  background: transparent;
 }

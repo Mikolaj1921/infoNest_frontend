@@ -113,7 +113,7 @@ export default function WorkspacePage() {
           </div>
 
           {/* ua: скрол-контейнер для відображення колонок фічі канбану */}
-          <div className="flex-1 overflow-x-auto pb-4 flex items-start gap-4 select-none min-h-[450px] scrollbar-thin scrollbar-thumb-border/60">
+          <div className="kanban-board-scroll flex-1 min-w-0 overflow-x-auto pb-4 flex items-start gap-4 select-none min-h-[450px]">
             {isLoading ? (
               <div className="text-xs font-medium text-muted-foreground animate-pulse p-2">
                 Loading board structure...

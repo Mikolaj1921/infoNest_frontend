@@ -48,7 +48,7 @@ export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
       </div>
 
       {/* Vertical task feed */}
-      <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5 scrollbar-thin scrollbar-thumb-border/40">
+      <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5 scrollbar-thin  scrollbar-thumb-border/40">
         {column.boardTasks && column.boardTasks.length > 0 ? (
           column.boardTasks.map((task) => (
             <TaskCard key={task.id} task={task} />
