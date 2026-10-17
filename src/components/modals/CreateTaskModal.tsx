@@ -2,7 +2,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,13 +10,19 @@ import { useModal } from '@/hooks/use-modal-store';
 import { useCreateTask } from '@/hooks/useKanbanData';
 import { useParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import {
+  faXmark,
+  faSpinner,
+  faCalendarDays,
+  faChevronDown,
+} from '@fortawesome/free-solid-svg-icons';
 
 // ua: клієнтська схема валідації полів через бібліотеку zod
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
   description: z.string().default(''),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
+  dueDate: z.string().default(''),
 });
 
 // fix: used types for form input and output to ensure proper type inference with react-hook-form and zod
@@ -33,6 +39,8 @@ export const CreateTaskModal = () => {
 
   const createTaskMutation = useCreateTask(workspaceId);
 
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
   // ua: хендлер для сабміту форми створення задачі
   const {
     register,
@@ -46,6 +54,7 @@ export const CreateTaskModal = () => {
       title: '',
       description: '',
       priority: 'MEDIUM',
+      dueDate: '',
     },
   });
 
@@ -58,6 +67,7 @@ export const CreateTaskModal = () => {
         title: values.title.trim(),
         description: values.description.trim(),
         priority: values.priority,
+        dueDate: values.dueDate ? new Date(values.dueDate).toISOString() : '',
         columnId,
         workspaceId,
       },
@@ -70,7 +80,20 @@ export const CreateTaskModal = () => {
     );
   };
 
+  const handleIconClick = () => {
+    if (dateInputRef.current) {
+      try {
+        dateInputRef.current.showPicker();
+        // eslint-disable-next-line
+      } catch (error) {
+        dateInputRef.current.click();
+      }
+    }
+  };
+
   if (!isModalOpen) return null;
+
+  const { ref: registerDateRef, ...registerDateProps } = register('dueDate');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
@@ -130,15 +153,53 @@ export const CreateTaskModal = () => {
             <label className="text-xs font-bold text-foreground/80">
               Priority
             </label>
-            <select
-              {...register('priority')}
-              disabled={createTaskMutation.isPending}
-              className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition cursor-pointer text-foreground/90"
-            >
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-            </select>
+
+            <div className="relative">
+              <select
+                {...register('priority')}
+                disabled={createTaskMutation.isPending}
+                className="w-full appearance-none rounded-xl border border-border/60 bg-background/50 pl-3.5 pr-10 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition cursor-pointer text-foreground/90"
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
+
+              <FontAwesomeIcon
+                icon={faChevronDown}
+                className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-foreground/60"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-foreground/80">
+              Due Date
+            </label>
+            <div className="relative w-full flex items-center">
+              <input
+                type="date"
+                disabled={createTaskMutation.isPending}
+                {...registerDateProps}
+                ref={(e) => {
+                  registerDateRef(e);
+
+                  dateInputRef.current = e;
+                }}
+                className="w-full rounded-xl border border-border/60 bg-background/50 pl-3.5 pr-10 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition text-foreground [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:w-0 [&::-webkit-calendar-picker-indicator]:h-0"
+              />
+              <button
+                type="button"
+                onClick={handleIconClick}
+                disabled={createTaskMutation.isPending}
+                className="absolute right-3.5 text-muted-foreground/60 hover:text-primary transition cursor-pointer flex items-center justify-center"
+              >
+                <FontAwesomeIcon
+                  icon={faCalendarDays}
+                  className="h-3.5 w-3.5"
+                />
+              </button>
+            </div>
           </div>
 
           {/* Кнопки дій */}

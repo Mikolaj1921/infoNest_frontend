@@ -12,12 +12,15 @@ import {
   faXmark,
   faSpinner,
   faTrashCan,
+  faCalendarDays,
+  faChevronDown,
 } from '@fortawesome/free-solid-svg-icons';
 
 const editTaskSchema = z.object({
   title: z.string().min(1, 'Task name is required').max(200),
   description: z.string().default(''),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
+  dueDate: z.string().default(''),
 });
 
 // fix ua: заюзано типи для форми вводу та виводу, щоб забезпечити правильне виведення типів з реакт хук форм + зод
@@ -38,6 +41,8 @@ export const EditTaskModal = () => {
 
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
   // ua: хендлер для сабміту форми редагування задачі (fix: поправлено типізацію)
   const {
     register,
@@ -50,6 +55,7 @@ export const EditTaskModal = () => {
       title: '',
       description: '',
       priority: 'MEDIUM',
+      dueDate: '',
     },
   });
 
@@ -70,6 +76,9 @@ export const EditTaskModal = () => {
         title: task.title,
         description: task.description || '',
         priority: task.priority,
+        dueDate: task.dueDate
+          ? new Date(task.dueDate).toISOString().split('T')[0]
+          : '',
       });
     }
   }, [task, reset]);
@@ -94,6 +103,7 @@ export const EditTaskModal = () => {
           title: values.title.trim(),
           description: values.description.trim(),
           priority: values.priority,
+          dueDate: values.dueDate ? new Date(values.dueDate).toISOString() : '',
         },
       },
       {
@@ -122,7 +132,20 @@ export const EditTaskModal = () => {
     });
   };
 
+  const handleIconClick = () => {
+    if (dateInputRef.current) {
+      try {
+        dateInputRef.current.showPicker();
+        // eslint-disable-next-line
+      } catch (error) {
+        dateInputRef.current.click();
+      }
+    }
+  };
+
   if (!isModalOpen || !task) return null;
+
+  const { ref: registerDateRef, ...registerDateProps } = register('dueDate');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
@@ -187,17 +210,59 @@ export const EditTaskModal = () => {
             <label className="text-xs font-bold text-foreground/80">
               Priority
             </label>
-            <select
-              {...register('priority')}
-              disabled={
-                updateTaskMutation.isPending || deleteTaskMutation.isPending
-              }
-              className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition cursor-pointer"
-            >
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-            </select>
+
+            <div className="relative">
+              <select
+                {...register('priority')}
+                disabled={
+                  updateTaskMutation.isPending || deleteTaskMutation.isPending
+                }
+                className="w-full appearance-none rounded-xl border border-border/60 bg-background/50 pl-3.5 pr-10 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition cursor-pointer"
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
+
+              <FontAwesomeIcon
+                icon={faChevronDown}
+                className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-foreground/60"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-foreground/80">
+              Due Date
+            </label>
+            <div className="relative w-full flex items-center">
+              <input
+                type="date"
+                disabled={
+                  updateTaskMutation.isPending || deleteTaskMutation.isPending
+                }
+                {...registerDateProps}
+                ref={(e) => {
+                  registerDateRef(e);
+
+                  dateInputRef.current = e;
+                }}
+                className="w-full rounded-xl border border-border/60 bg-background/50 pl-3.5 pr-10 py-2 text-xs focus:border-primary/40 focus:outline-hidden transition text-foreground [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:w-0 [&::-webkit-calendar-picker-indicator]:h-0"
+              />
+              <button
+                type="button"
+                onClick={handleIconClick}
+                disabled={
+                  updateTaskMutation.isPending || deleteTaskMutation.isPending
+                }
+                className="absolute right-3.5 text-muted-foreground/60 hover:text-primary transition cursor-pointer flex items-center justify-center"
+              >
+                <FontAwesomeIcon
+                  icon={faCalendarDays}
+                  className="h-3.5 w-3.5"
+                />
+              </button>
+            </div>
           </div>
 
           {/* ua: дії - кнопки */}

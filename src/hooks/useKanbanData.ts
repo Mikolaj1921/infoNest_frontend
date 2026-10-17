@@ -44,6 +44,7 @@ export const useCreateTask = (workspaceId: string) => {
       columnId: string;
       workspaceId: string;
       priority: 'LOW' | 'MEDIUM' | 'HIGH';
+      dueDate?: string;
     }) => taskService.createTask(payload),
     onSuccess: () => {
       toast.success('Task successfully created');
@@ -71,6 +72,7 @@ export const useUpdateTask = (workspaceId: string) => {
         title: string;
         description: string;
         priority: 'LOW' | 'MEDIUM' | 'HIGH';
+        dueDate?: string;
       };
     }) => taskService.updateTask(taskId, workspaceId, payload),
     onSuccess: () => {

@@ -38,6 +38,7 @@ export const taskService = {
     columnId: string;
     workspaceId: string;
     priority: 'LOW' | 'MEDIUM' | 'HIGH';
+    dueDate?: string;
   }): Promise<BoardTask> => {
     const { data } = await api.post<BoardTaskResponse>('/board-tasks', payload);
     return data.data.task;
@@ -51,6 +52,7 @@ export const taskService = {
       title: string;
       description: string;
       priority: 'LOW' | 'MEDIUM' | 'HIGH';
+      dueDate?: string;
     },
   ): Promise<BoardTask> => {
     const { data } = await api.patch<BoardTaskResponse>(
