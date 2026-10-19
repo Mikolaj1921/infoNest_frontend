@@ -94,7 +94,7 @@ describe('Component: BoardColumn', () => {
       wrapper,
     });
 
-    const optionsButton = screen.getByTitle('Опції колонки');
+    const optionsButton = screen.getByTitle('Options column');
     fireEvent.click(optionsButton);
 
     expect(mockOnOpen).toHaveBeenCalledWith('editTaskColumn', {
