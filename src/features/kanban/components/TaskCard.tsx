@@ -1,3 +1,5 @@
+// task card - ua: модалка картки таски
+
 'use client';
 
 import React from 'react';
@@ -8,9 +10,10 @@ import { faClock, faCircle } from '@fortawesome/free-solid-svg-icons';
 
 interface TaskCardProps {
   task: BoardTask;
+  isDragging?: boolean;
+  isDropping?: boolean;
 }
 
-// ua: підбір кольору бейджа для різних рівнів пріоритету задачі
 const getPriorityStyles = (priority: TaskPriority) => {
   switch (priority) {
     case 'HIGH':
@@ -31,16 +34,37 @@ const getPriorityStyles = (priority: TaskPriority) => {
   }
 };
 
-export const TaskCard = ({ task }: TaskCardProps) => {
+export const TaskCard = ({
+  task,
+  isDragging = false,
+  isDropping = false,
+}: TaskCardProps) => {
   const { onOpen } = useModal();
   const priority = getPriorityStyles(task.priority);
 
+  const handleClick = () => {
+    if (isDragging || isDropping) return;
+
+    onOpen('editBoardTask', { task });
+  };
+
   return (
     <div
-      onClick={() => onOpen('editBoardTask', { task })}
-      className="group relative flex flex-col rounded-xl border border-border/50 bg-background/60 p-3.5 mt-2 mb-2 space-y-3 hover:border-primary/30 hover:bg-accent/10 transition-all duration-200 cursor-pointer shadow-sm animate-in fade-in duration-200 select-none text-left"
+      onClick={handleClick}
+      className={`
+        group relative flex flex-col
+        rounded-xl border bg-background/60
+        p-3.5 space-y-3
+        select-none text-left
+        transition-[border-color,background-color,box-shadow]
+        duration-150
+        ${
+          isDragging
+            ? 'border-primary/50 shadow-xl shadow-black/15 ring-1 ring-primary/20 cursor-grabbing'
+            : 'border-border/50 hover:border-primary/30 hover:bg-accent/10 cursor-pointer shadow-sm'
+        }
+      `}
     >
-      {/* Заголовок та пріоритет таски */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <span
@@ -50,12 +74,12 @@ export const TaskCard = ({ task }: TaskCardProps) => {
             <span>{priority.label}</span>
           </span>
         </div>
+
         <h4 className="text-xs font-bold text-foreground/90 leading-normal group-hover:text-primary transition-colors">
           {task.title}
         </h4>
       </div>
 
-      {/* гua: description */}
       {task.description && (
         <p
           className="task-card-description text-[11px] text-muted-foreground/70 leading-relaxed"
@@ -64,7 +88,7 @@ export const TaskCard = ({ task }: TaskCardProps) => {
           {task.description}
         </p>
       )}
-      {/* Нижня панель метаданих: дедлайн та виконавець */}
+
       <div className="flex items-center justify-between pt-1 border-t border-border/20 text-[10px] text-muted-foreground">
         <div className="flex items-center gap-1">
           <FontAwesomeIcon icon={faClock} className="h-3 w-3 opacity-60" />
