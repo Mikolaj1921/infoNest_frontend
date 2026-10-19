@@ -1,6 +1,8 @@
+// workscape main page - docs, kanban & whiteboard
+
 'use client';
 
-import React, { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -8,38 +10,200 @@ import {
   faTasks,
   faPlus,
 } from '@fortawesome/free-solid-svg-icons';
+// dnd libs
+import { DragDropProvider } from '@dnd-kit/react';
+import { isSortable } from '@dnd-kit/react/sortable';
+import { move } from '@dnd-kit/helpers';
+// tanstack
+import { useQueryClient } from '@tanstack/react-query';
+// kanban hooks
 import {
   useWorkspaceKanban,
   useCreateColumn,
-  //useCreateTask,
+  useReorderTasks,
 } from '@/hooks/useKanbanData';
+// modals
 import { BoardColumn } from '@/features/kanban/components/BoardColumn';
+// usemodal
 import { useModal } from '@/hooks/use-modal-store';
+// kanban
+import { BoardTask, TaskCategory } from '@/types/kanban';
+
+type TaskGroups = Record<string, BoardTask[]>;
+
+function cloneGroups(groups: TaskGroups): TaskGroups {
+  return Object.fromEntries(
+    Object.entries(groups).map(([columnId, tasks]) => [columnId, [...tasks]]),
+  );
+}
+
+function groupsFromCategories(categories: TaskCategory[]): TaskGroups {
+  return Object.fromEntries(
+    categories.map((column) => [column.id, [...(column.boardTasks ?? [])]]),
+  );
+}
 
 export default function WorkspacePage() {
   const params = useParams();
-  const { onOpen } = useModal(); // global modal store for opening modals
+  const workspaceId = typeof params.id === 'string' ? params.id : '';
 
-  const workspaceId = typeof params?.id === 'string' ? params.id : '';
+  const { onOpen } = useModal();
+  const queryClient = useQueryClient();
+  const queryKey = ['workspace-kanban', workspaceId];
 
-  // local state to manage the active tab between doc & kanban view
+  const { data: categories, isLoading } = useWorkspaceKanban(workspaceId);
+
+  const createColumnMutation = useCreateColumn(workspaceId);
+  const reorderTasksMutation = useReorderTasks(workspaceId);
+
   const [activeTab, setActiveTab] = useState<'documents' | 'kanban'>(
     'documents',
   );
 
-  // ua: Завантаження даних дошки та мутації через TanStack Query хуки фічі
-  const { data: categories, isLoading } = useWorkspaceKanban(workspaceId);
-  const createColumnMutation = useCreateColumn(workspaceId);
-  //const createTaskMutation = useCreateTask(workspaceId);
+  const [dragGroups, setDragGroups] = useState<TaskGroups | null>(null);
 
-  // update: handle opening the modal for creating a new task column
+  const groupsRef = useRef<TaskGroups>({});
+  const snapshotRef = useRef<TaskGroups | null>(null);
+  const draggingRef = useRef(false);
+
+  const handleDragStart = () => {
+    if (!categories) return;
+
+    const initialGroups = groupsFromCategories(categories);
+
+    groupsRef.current = initialGroups;
+    snapshotRef.current = cloneGroups(initialGroups);
+    draggingRef.current = true;
+
+    setDragGroups(initialGroups);
+
+    void queryClient.cancelQueries({ queryKey });
+  };
+
+  const handleDragOver = (
+    event: Parameters<
+      NonNullable<React.ComponentProps<typeof DragDropProvider>['onDragOver']>
+    >[0],
+  ) => {
+    if (!draggingRef.current) return;
+
+    const nextGroups = move(groupsRef.current, event) as TaskGroups;
+
+    const normalizedGroups: TaskGroups = Object.fromEntries(
+      Object.entries(nextGroups).map(([columnId, tasks]) => [
+        columnId,
+        tasks.map((task) => ({
+          ...task,
+          columnId,
+        })),
+      ]),
+    );
+
+    groupsRef.current = normalizedGroups;
+    setDragGroups(normalizedGroups);
+  };
+
+  // handler dnd - ua: хендлер для перетегувань таск
+  const handleDragEnd = (
+    event: Parameters<
+      NonNullable<React.ComponentProps<typeof DragDropProvider>['onDragEnd']>
+    >[0],
+  ) => {
+    if (event.canceled) {
+      const snapshot = snapshotRef.current;
+
+      if (snapshot) {
+        const restoredGroups = cloneGroups(snapshot);
+        groupsRef.current = restoredGroups;
+        setDragGroups(null);
+      }
+
+      snapshotRef.current = null;
+      draggingRef.current = false;
+      return;
+    }
+
+    const source = event.operation.source;
+
+    if (!source || !isSortable(source)) {
+      snapshotRef.current = null;
+      draggingRef.current = false;
+      setDragGroups(null);
+      return;
+    }
+
+    const initialColumnId = String(source.initialGroup ?? '');
+    const destinationColumnId = String(source.group ?? '');
+
+    const currentCategories =
+      queryClient.getQueryData<TaskCategory[]>(queryKey);
+
+    const snapshot = snapshotRef.current;
+
+    snapshotRef.current = null;
+    draggingRef.current = false;
+    setDragGroups(null);
+
+    if (
+      !currentCategories ||
+      !snapshot ||
+      !initialColumnId ||
+      !destinationColumnId
+    ) {
+      return;
+    }
+
+    const previousKanbanData = currentCategories.map((column) => ({
+      ...column,
+      boardTasks: [...(column.boardTasks ?? [])],
+    }));
+
+    const affectedColumns = new Set([initialColumnId, destinationColumnId]);
+
+    const nextCategories = currentCategories.map((column) => {
+      const tasks = groupsRef.current[column.id];
+
+      if (!tasks) return column;
+
+      return {
+        ...column,
+        boardTasks: tasks.map((task, index) => ({
+          ...task,
+          columnId: column.id,
+          position: index,
+        })),
+      };
+    });
+
+    const reorderedTasks = nextCategories
+      .filter((column) => affectedColumns.has(column.id))
+      .flatMap((column) =>
+        column.boardTasks.map((task, index) => ({
+          id: task.id,
+          position: index,
+          columnId: column.id,
+        })),
+      );
+
+    queryClient.setQueryData(queryKey, nextCategories);
+
+    reorderTasksMutation.mutate({
+      tasks: reorderedTasks,
+      previousKanbanData,
+    });
+  };
+
   const handleAddColumn = () => {
     onOpen('createTaskColumn');
   };
 
+  const displayedCategories = categories?.map((column) => ({
+    ...column,
+    boardTasks: dragGroups?.[column.id] ?? column.boardTasks ?? [],
+  }));
+
   return (
-    <div className="flex flex-1 flex-col p-6 h-full bg-background animate-in fade-in duration-300">
-      {/* апдейт: верхній перемикач між режимами */}
+    <div className="flex flex-1 flex-col p-6 h-full bg-background">
       <div className="flex items-center justify-between border-b border-border/40 pb-3 mb-6">
         <div className="flex items-center gap-1.5 bg-secondary/40 p-1 rounded-xl border border-border/10">
           <button
@@ -54,6 +218,7 @@ export default function WorkspacePage() {
             <FontAwesomeIcon icon={faFolderOpen} className="h-3.5 w-3.5" />
             <span>Documents</span>
           </button>
+
           <button
             type="button"
             onClick={() => setActiveTab('kanban')}
@@ -73,7 +238,6 @@ export default function WorkspacePage() {
         </div>
       </div>
 
-      {/* ua: Відображення вкладки документів - заглушка */}
       {activeTab === 'documents' && (
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <div className="max-w-md space-y-4">
@@ -85,6 +249,7 @@ export default function WorkspacePage() {
               <h2 className="text-xl font-bold tracking-tight text-foreground">
                 Welcome to your workspace!
               </h2>
+
               <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                 Select an existing document in the left sidebar or create a new
                 folder to start organizing your knowledge.
@@ -94,48 +259,56 @@ export default function WorkspacePage() {
         </div>
       )}
 
-      {/* ua: Відображення вкладки канбан - заглушка */}
       {activeTab === 'kanban' && (
         <div className="flex-1 flex flex-col min-h-0 space-y-4 text-left">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-foreground/90">
               Sprint Task Board
             </h3>
+
             <button
               type="button"
               onClick={handleAddColumn}
               disabled={isLoading || createColumnMutation.isPending}
               className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition cursor-pointer shadow-sm disabled:opacity-50"
             >
-              <FontAwesomeIcon icon={faPlus} className="text-[10px]" />
+              <FontAwesomeIcon className="text-[10px]" icon={faPlus} />
               <span>Add Column</span>
             </button>
           </div>
 
-          {/* ua: скрол-контейнер для відображення колонок фічі канбану */}
-          <div className="kanban-board-scroll flex-1 min-w-0 overflow-x-auto pb-4 flex items-start gap-4 select-none min-h-[450px]">
-            {isLoading ? (
-              <div className="text-xs font-medium text-muted-foreground animate-pulse p-2">
-                Loading board structure...
-              </div>
-            ) : categories && categories.length > 0 ? (
-              categories.map((col) => (
-                <BoardColumn
-                  key={col.id}
-                  column={col}
-                  onAddTask={(columnId) => {
-                    // modal store
-                    onOpen('createBoardTask', { columnId });
-                  }}
-                />
-              ))
-            ) : (
-              <div className="text-xs italic text-muted-foreground/60 p-2">
-                Columns not yet created. Click &quot;Add Column&quot; to
-                initialize the board.
-              </div>
-            )}
-          </div>
+          <DragDropProvider
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div
+              className={`kanban-board-scroll flex-1 min-h-0 overflow-auto pb-4 flex items-start gap-4 select-none ${
+                reorderTasksMutation.isPending ? 'pointer-events-none' : ''
+              }`}
+            >
+              {isLoading ? (
+                <div className="text-xs font-medium text-muted-foreground animate-pulse p-2">
+                  Loading board structure...
+                </div>
+              ) : displayedCategories?.length ? (
+                displayedCategories.map((column) => (
+                  <BoardColumn
+                    key={column.id}
+                    column={column}
+                    onAddTask={(columnId) =>
+                      onOpen('createBoardTask', { columnId })
+                    }
+                  />
+                ))
+              ) : (
+                <div className="text-xs italic text-muted-foreground/60 p-2">
+                  Columns not yet created. Click &quot;Add Column&quot; to
+                  initialize the board.
+                </div>
+              )}
+            </div>
+          </DragDropProvider>
         </div>
       )}
     </div>

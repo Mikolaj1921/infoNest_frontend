@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskService } from '@/services/task.service';
 import { toast } from 'sonner';
+import { TaskCategory } from '@/types/kanban';
 
 // ua: хук для отримання всієї структури дошки
 export const useWorkspaceKanban = (workspaceId: string) => {
@@ -138,6 +139,35 @@ export const useUpdateColumn = (workspaceId: string) => {
     },
     onError: () => {
       toast.error('Failed to change the name of the column');
+    },
+  });
+};
+
+// ua: хук перетягування тасок (dnd)
+
+export const useReorderTasks = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+  const queryKey = ['workspace-kanban', workspaceId];
+
+  type ReorderPayload = {
+    id: string;
+    position: number;
+    columnId: string;
+  };
+
+  type ReorderVariables = {
+    tasks: ReorderPayload[];
+    previousKanbanData: TaskCategory[];
+  };
+
+  return useMutation({
+    mutationFn: ({ tasks }: ReorderVariables) =>
+      taskService.reorderTasks(workspaceId, tasks),
+
+    onError: (_error, variables) => {
+      queryClient.setQueryData(queryKey, variables.previousKanbanData);
+
+      toast.error('Failed to save the order of tasks');
     },
   });
 };
