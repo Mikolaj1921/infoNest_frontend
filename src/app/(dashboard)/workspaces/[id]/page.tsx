@@ -9,6 +9,7 @@ import {
   faFolderOpen,
   faTasks,
   faPlus,
+  faChalkboard,
 } from '@fortawesome/free-solid-svg-icons';
 // dnd libs
 import { DragDropProvider } from '@dnd-kit/react';
@@ -24,6 +25,9 @@ import {
 } from '@/hooks/useKanbanData';
 // modals
 import { BoardColumn } from '@/features/kanban/components/BoardColumn';
+// whiteboard
+import { WhiteboardWrapper } from '@/features/whiteboard/components/WhiteboardWrapper';
+import type { WhiteboardElements } from '@/features/whiteboard/components/WhiteboardCanvas';
 // usemodal
 import { useModal } from '@/hooks/use-modal-store';
 // kanban
@@ -56,11 +60,15 @@ export default function WorkspacePage() {
   const createColumnMutation = useCreateColumn(workspaceId);
   const reorderTasksMutation = useReorderTasks(workspaceId);
 
-  const [activeTab, setActiveTab] = useState<'documents' | 'kanban'>(
-    'documents',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'documents' | 'kanban' | 'whiteboard'
+  >('documents');
 
   const [dragGroups, setDragGroups] = useState<TaskGroups | null>(null);
+
+  // whiteboard - тимчасовий локальний стан до інтеграції з бекендом
+  const [whiteboardElements, setWhiteboardElements] =
+    useState<WhiteboardElements>([]);
 
   const groupsRef = useRef<TaskGroups>({});
   const snapshotRef = useRef<TaskGroups | null>(null);
@@ -231,6 +239,20 @@ export default function WorkspacePage() {
             <FontAwesomeIcon icon={faTasks} className="h-3.5 w-3.5" />
             <span>Tasks Kanban</span>
           </button>
+
+          {/* whiteboard - перехід до графічного полотна */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('whiteboard')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              activeTab === 'whiteboard'
+                ? 'bg-background text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FontAwesomeIcon icon={faChalkboard} className="h-3.5 w-3.5" />
+            <span>Whiteboard</span>
+          </button>
         </div>
 
         <div className="text-[10px] text-muted-foreground/40 font-mono tracking-wider bg-secondary/20 px-2.5 py-1 rounded-md border border-border/55">
@@ -309,6 +331,30 @@ export default function WorkspacePage() {
               )}
             </div>
           </DragDropProvider>
+        </div>
+      )}
+
+      {/* whiteboard*/}
+      {activeTab === 'whiteboard' && (
+        <div className="flex-1 flex flex-col min-h-0 space-y-4 text-left">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-foreground/90">
+                Workspace Whiteboard
+              </h3>
+
+              <p className="text-sm text-muted-foreground mt-1">
+                Draw diagrams, add shapes, and organize your ideas.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-[500px]">
+            <WhiteboardWrapper
+              elements={whiteboardElements}
+              onChange={setWhiteboardElements}
+            />
+          </div>
         </div>
       )}
     </div>
