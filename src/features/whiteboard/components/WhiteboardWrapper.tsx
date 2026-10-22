@@ -1,123 +1,78 @@
 'use client';
 
-import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faExclamationTriangle,
-  faSpinner,
-} from '@fortawesome/free-solid-svg-icons';
+import WhiteboardHeader from './WhiteboardHeader';
+import WhiteboardLoadingState from './WhiteboardLoadingState';
+import WhiteboardErrorState from './WhiteboardErrorState';
+import WhiteboardErrorBoundary from './WhiteboardErrorBoundary';
+import { useWhiteboardController } from '../hooks/useWhiteboardController';
 
-import type { WhiteboardElements } from './WhiteboardCanvas';
-
-interface WhiteboardWrapperProps {
-  elements: WhiteboardElements;
-  onChange: (elements: WhiteboardElements) => void;
-  isReadOnly?: boolean;
-  isLoading?: boolean;
-  error?: string | null;
-}
-
-function CanvasLoadingState() {
-  return (
-    <div
-      role="status"
-      className="flex min-h-[500px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/40 bg-secondary/10"
-    >
-      <FontAwesomeIcon
-        icon={faSpinner}
-        className="h-6 w-6 animate-spin text-primary"
-      />
-
-      <span className="text-xs font-bold tracking-wide text-muted-foreground/80">
-        Loading whiteboard...
-      </span>
-    </div>
-  );
-}
-
-function CanvasErrorState({ message }: { message: string }) {
-  return (
-    <div
-      role="alert"
-      className="flex min-h-[500px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/20 bg-background p-6 text-center"
-    >
-      <FontAwesomeIcon
-        icon={faExclamationTriangle}
-        className="h-6 w-6 text-destructive"
-      />
-
-      <p className="text-sm font-semibold text-destructive">
-        Failed to load the board
-      </p>
-
-      <p className="max-w-md text-xs text-muted-foreground">{message}</p>
-    </div>
-  );
-}
-
+// ua: динамічний імпорт Excalidraw, щоб завантажувати Canvas на клієнті
 const DynamicCanvas = dynamic(() => import('./WhiteboardCanvas'), {
   ssr: false,
-  loading: () => <CanvasLoadingState />,
+  loading: () => (
+    <WhiteboardLoadingState message="Loading whiteboard canvas..." />
+  ),
 });
 
-interface ErrorBoundaryProps {
-  children: ReactNode;
+interface WhiteboardWrapperProps {
+  workspaceId: string;
 }
 
-interface ErrorBoundaryState {
-  hasError: boolean;
-}
-
-class WrapperErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
-  state: ErrorBoundaryState = {
-    hasError: false,
-  };
-
-  static getDerivedStateFromError(): ErrorBoundaryState {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('Whiteboard wrapper error:', error, info);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <CanvasErrorState message="An error occurred while loading the canvas. Try reloading the page." />
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-export function WhiteboardWrapper({
-  elements,
-  onChange,
-  isReadOnly = false,
-  isLoading = false,
-  error = null,
+export default function WhiteboardWrapper({
+  workspaceId,
 }: WhiteboardWrapperProps) {
+  const {
+    whiteboard,
+    elements,
+    appState,
+    isLoading,
+    isError,
+    isReadOnly,
+    saveStatus,
+    setIsReadOnly,
+    retryLoading,
+    handleChange,
+    handleThemeChange,
+  } = useWhiteboardController(workspaceId);
+
   if (isLoading) {
-    return <CanvasLoadingState />;
+    return <WhiteboardLoadingState message="Loading whiteboard..." />;
   }
 
-  if (error) {
-    return <CanvasErrorState message={error} />;
+  if (isError || !whiteboard) {
+    return (
+      <WhiteboardErrorState
+        message="Unable to load the whiteboard. Please try again."
+        onRetry={retryLoading}
+      />
+    );
   }
 
   return (
-    <WrapperErrorBoundary>
-      <DynamicCanvas
-        elements={elements}
-        onChange={onChange}
+    <section className="flex h-full min-h-0 flex-col gap-4">
+      <WhiteboardHeader
+        saveStatus={saveStatus}
         isReadOnly={isReadOnly}
+        onToggleReadOnly={() => setIsReadOnly(!isReadOnly)}
       />
-    </WrapperErrorBoundary>
+
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl">
+        <WhiteboardErrorBoundary>
+          <DynamicCanvas
+            elements={elements}
+            appState={appState}
+            onChange={handleChange}
+            onThemeChange={handleThemeChange}
+            isReadOnly={isReadOnly}
+          />
+        </WhiteboardErrorBoundary>
+      </div>
+
+      <footer className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <p>Changes are saved automatically after 2 seconds.</p>
+        <p>Board ID: {whiteboard.id}</p>
+      </footer>
+    </section>
   );
 }

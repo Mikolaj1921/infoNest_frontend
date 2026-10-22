@@ -1,15 +1,20 @@
-// ua: дата хук дошки
+'use client';
+
+// ua: хуки для отримання та збереження дошки
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
 import { toast } from 'sonner';
 
 import { whiteboardService } from '@/services/whiteboard.service';
+
 import type {
   UpdateWhiteboardPayload,
   UpdateWhiteboardSettingsPayload,
+  Whiteboard,
 } from '@/types/whiteboard';
 
-// ua: хук для отримання або створення Miro-полотна конкретного воркспейсу
+// ua: хук для отримання або створення дошки конкретного воркспейсу
 export const useWorkspaceWhiteboard = (workspaceId: string) => {
   return useQuery({
     queryKey: ['workspace-whiteboard', workspaceId],
@@ -30,10 +35,20 @@ export const useUpdateWhiteboard = (workspaceId: string) => {
       whiteboardService.updateWhiteboard(whiteboardId, workspaceId, payload),
 
     onSuccess: (updatedData) => {
-      // ua: оновлюємо кеш без повторного запиту, щоб уникнути блимання полотна
-      queryClient.setQueryData(
+      // ua: оновлюємо лише елементи, щоб не перезаписати новіші налаштування
+      queryClient.setQueryData<Whiteboard | null>(
         ['workspace-whiteboard', workspaceId],
-        updatedData,
+        (currentData) => {
+          if (!currentData) {
+            return updatedData;
+          }
+
+          return {
+            ...currentData,
+            elements: updatedData.elements,
+            updatedAt: updatedData.updatedAt,
+          };
+        },
       );
     },
 
@@ -59,10 +74,20 @@ export const useUpdateWhiteboardSettings = (workspaceId: string) => {
       ),
 
     onSuccess: (updatedData) => {
-      // ua: оновлюємо кеш налаштувань без повторного завантаження дошки
-      queryClient.setQueryData(
+      // ua: оновлюємо лише налаштування, не перезаписуючи новіші елементи
+      queryClient.setQueryData<Whiteboard | null>(
         ['workspace-whiteboard', workspaceId],
-        updatedData,
+        (currentData) => {
+          if (!currentData) {
+            return updatedData;
+          }
+
+          return {
+            ...currentData,
+            settings: updatedData.settings,
+            updatedAt: updatedData.updatedAt,
+          };
+        },
       );
     },
 

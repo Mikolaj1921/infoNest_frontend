@@ -1,3 +1,5 @@
+// canvas whiteboard
+
 'use client';
 
 import {
@@ -5,20 +7,38 @@ import {
   type ComponentProps,
   type ErrorInfo,
   type ReactNode,
+  useEffect,
+  useRef,
+  useState,
 } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
+import '@excalidraw/excalidraw/index.css';
 
+// types
 type ExcalidrawProps = ComponentProps<typeof Excalidraw>;
-
 type ExcalidrawOnChange = NonNullable<ExcalidrawProps['onChange']>;
+type ExcalidrawAPI = Parameters<
+  NonNullable<ExcalidrawProps['excalidrawAPI']>
+>[0];
 
 export type WhiteboardElements = Parameters<ExcalidrawOnChange>[0];
-
 export type WhiteboardElement = WhiteboardElements[number];
+export type WhiteboardAppState = Partial<Parameters<ExcalidrawOnChange>[1]>;
+export type WhiteboardTheme = 'light' | 'dark';
+
+export interface WhiteboardContent {
+  elements: WhiteboardElements;
+  appState: WhiteboardAppState;
+}
 
 interface WhiteboardCanvasProps {
   elements: WhiteboardElements;
-  onChange: (elements: WhiteboardElements) => void;
+  appState: WhiteboardAppState;
+  onChange: (
+    elements: WhiteboardElements,
+    appState: WhiteboardAppState,
+  ) => void;
+  onThemeChange: (theme: WhiteboardTheme) => void;
   isReadOnly?: boolean;
 }
 
@@ -49,26 +69,13 @@ class CanvasErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div
-          role="alert"
-          className="flex min-h-[500px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/20 bg-background p-6 text-center"
-        >
-          <p className="text-sm font-semibold text-destructive">
-            Failed to open the canvas
+        <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-border bg-background p-6 text-center">
+          <p className="font-medium text-foreground">
+            Failed to load the board
           </p>
-
-          <p className="max-w-sm text-xs text-muted-foreground">
-            An error occurred while initializing the board. Try reloading the
-            page.
+          <p className="text-sm text-muted-foreground">
+            Try refreshing the page. If the error persists, check the console.
           </p>
-
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="rounded-lg border border-border px-4 py-2 text-xs font-semibold transition-colors hover:bg-accent"
-          >
-            Reload
-          </button>
         </div>
       );
     }
@@ -77,26 +84,55 @@ class CanvasErrorBoundary extends Component<
   }
 }
 
+// canvas comp
 export default function WhiteboardCanvas({
   elements,
+  appState,
   onChange,
+  onThemeChange,
   isReadOnly = false,
 }: WhiteboardCanvasProps) {
+  const [api, setApi] = useState<ExcalidrawAPI | null>(null);
+
+  const lastThemeRef = useRef<WhiteboardTheme>(
+    appState.theme === 'dark' ? 'dark' : 'light',
+  );
+
+  // theme
+  useEffect(() => {
+    if (!api || isReadOnly) return;
+
+    const unsubscribe = api.onChange((_nextElements, nextAppState) => {
+      const theme = nextAppState.theme;
+
+      if (theme !== 'light' && theme !== 'dark') return;
+      if (theme === lastThemeRef.current) return;
+
+      lastThemeRef.current = theme;
+      onThemeChange(theme);
+    });
+
+    return unsubscribe;
+  }, [api, isReadOnly, onThemeChange]);
+
   return (
     <CanvasErrorBoundary>
-      <div className="relative h-full min-h-[500px] w-full overflow-hidden rounded-2xl border border-border/40 bg-background">
+      <div className="relative h-full min-h-0 w-full overflow-hidden rounded-xl bg-background">
         <Excalidraw
+          excalidrawAPI={setApi}
           initialData={{
             elements: [...elements],
             appState: {
+              ...appState,
+              theme: appState.theme === 'dark' ? 'dark' : 'light',
               viewModeEnabled: isReadOnly,
             },
           }}
           viewModeEnabled={isReadOnly}
-          onChange={(nextElements) => {
+          onChange={(nextElements, nextAppState) => {
             if (isReadOnly) return;
 
-            onChange(nextElements);
+            onChange(nextElements, nextAppState);
           }}
         />
       </div>
