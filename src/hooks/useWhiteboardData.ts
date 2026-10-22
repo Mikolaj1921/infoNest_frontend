@@ -1,7 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { whiteboardService } from '@/services/whiteboard.service';
-import { WhiteboardElements } from '@/features/whiteboard/components/WhiteboardCanvas';
+// ua: дата хук дошки
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+
+import { whiteboardService } from '@/services/whiteboard.service';
+import type {
+  UpdateWhiteboardPayload,
+  UpdateWhiteboardSettingsPayload,
+} from '@/types/whiteboard';
 
 // ua: хук для отримання або створення Miro-полотна конкретного воркспейсу
 export const useWorkspaceWhiteboard = (workspaceId: string) => {
@@ -12,28 +18,56 @@ export const useWorkspaceWhiteboard = (workspaceId: string) => {
   });
 };
 
-// ua: хук мутації для фонового автозбереження стану фігур на дошці
+// ua: хук мутації для фонового автозбереження елементів дошки
 export const useUpdateWhiteboard = (workspaceId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
       whiteboardId,
-      elements,
-    }: {
-      whiteboardId: string;
-      elements: WhiteboardElements;
-    }) =>
-      whiteboardService.updateWhiteboard(whiteboardId, workspaceId, elements),
+      ...payload
+    }: UpdateWhiteboardPayload & { whiteboardId: string }) =>
+      whiteboardService.updateWhiteboard(whiteboardId, workspaceId, payload),
+
     onSuccess: (updatedData) => {
-      // оновлюємо дані в кеші TanStack Query вручну без рефетчу, щоб уникнути блимання полотна
+      // ua: оновлюємо кеш без повторного запиту, щоб уникнути блимання полотна
       queryClient.setQueryData(
         ['workspace-whiteboard', workspaceId],
         updatedData,
       );
     },
+
     onError: () => {
       toast.error('Failed to autosave whiteboard progress');
+    },
+  });
+};
+
+// ua: хук мутації для збереження налаштувань Excalidraw
+export const useUpdateWhiteboardSettings = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      whiteboardId,
+      ...payload
+    }: UpdateWhiteboardSettingsPayload & { whiteboardId: string }) =>
+      whiteboardService.updateWhiteboardSettings(
+        whiteboardId,
+        workspaceId,
+        payload,
+      ),
+
+    onSuccess: (updatedData) => {
+      // ua: оновлюємо кеш налаштувань без повторного завантаження дошки
+      queryClient.setQueryData(
+        ['workspace-whiteboard', workspaceId],
+        updatedData,
+      );
+    },
+
+    onError: () => {
+      toast.error('Failed to save whiteboard settings');
     },
   });
 };
