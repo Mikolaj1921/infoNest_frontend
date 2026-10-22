@@ -40,7 +40,7 @@ export const useUpdateWhiteboard = (workspaceId: string) => {
         ['workspace-whiteboard', workspaceId],
         (currentData) => {
           if (!currentData) {
-            return null;
+            return undefined;
           }
 
           return {
