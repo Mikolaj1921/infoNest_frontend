@@ -1,3 +1,5 @@
+// header whiteboard
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCheck,
@@ -12,7 +14,7 @@ export type WhiteboardSaveStatus = 'saving' | 'saved' | 'error';
 interface WhiteboardHeaderProps {
   saveStatus: WhiteboardSaveStatus;
   isReadOnly: boolean;
-  onToggleReadOnly: () => void;
+  onToggleReadOnly?: () => void;
 }
 
 const SAVE_STATUS_CONFIG = {
@@ -57,14 +59,16 @@ export default function WhiteboardHeader({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onToggleReadOnly}
-        className="inline-flex items-center justify-center gap-2 self-start rounded-lg border border-border px-4 py-2 text-sm transition-colors hover:bg-muted sm:self-auto"
-      >
-        <FontAwesomeIcon icon={isReadOnly ? faPen : faEye} />
-        {isReadOnly ? 'Edit board' : 'View board'}
-      </button>
+      {onToggleReadOnly && (
+        <button
+          type="button"
+          onClick={onToggleReadOnly}
+          className="inline-flex items-center justify-center gap-2 self-start rounded-lg border border-border px-4 py-2 text-sm transition-colors hover:bg-muted sm:self-auto"
+        >
+          <FontAwesomeIcon icon={isReadOnly ? faPen : faEye} />
+          {isReadOnly ? 'Edit board' : 'View board'}
+        </button>
+      )}
     </header>
   );
 }

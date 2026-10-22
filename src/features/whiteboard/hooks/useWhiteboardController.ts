@@ -1,3 +1,5 @@
+// whiteboard controller hook
+
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -14,7 +16,12 @@ import type {
   WhiteboardTheme,
 } from '../components/WhiteboardCanvas';
 
-import type { Whiteboard, WhiteboardSettings } from '@/types/whiteboard';
+import type {
+  Whiteboard,
+  WhiteboardRole,
+  WhiteboardSettings,
+} from '@/types/whiteboard';
+
 import type { WhiteboardSaveStatus } from '../components/WhiteboardHeader';
 
 import {
@@ -32,6 +39,8 @@ interface WhiteboardDraft {
 
 interface UseWhiteboardControllerResult {
   whiteboard: Whiteboard | undefined;
+  role: WhiteboardRole | undefined;
+  canEdit: boolean;
   elements: WhiteboardElements;
   appState: WhiteboardAppState;
   isLoading: boolean;
@@ -54,12 +63,20 @@ export function useWhiteboardController(
   const updateWhiteboard = useUpdateWhiteboard(workspaceId);
   const updateWhiteboardSettings = useUpdateWhiteboardSettings(workspaceId);
 
-  // ua: API повертає дошку без додаткової вкладеності data
-  const whiteboard: Whiteboard | undefined = whiteboardQuery.data ?? undefined;
+  // ua: API повертає дошку разом із роллю поточного користувача
+  const whiteboard: Whiteboard | undefined = whiteboardQuery.data?.whiteboard;
+
+  const role = whiteboardQuery.data?.role;
+
+  // ua: редагувати дошку можуть лише Owner, Admin та Editor
+  const canEdit = role === 'Owner' || role === 'Admin' || role === 'Editor';
 
   const [draft, setDraft] = useState<WhiteboardDraft | null>(null);
-  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [manualReadOnly, setManualReadOnly] = useState(false);
   const [saveStatus, setSaveStatus] = useState<WhiteboardSaveStatus>('saved');
+
+  // ua: режим перегляду примусово вмикається для користувачів без прав редагування
+  const isReadOnly = !canEdit || manualReadOnly;
 
   const lastSavedElementsRef = useRef<string | null>(null);
   const lastSavedSettingsRef = useRef<string | null>(null);
@@ -119,9 +136,10 @@ export function useWhiteboardController(
     );
   }, [initialData]);
 
-  // ua: автоматично зберігаємо елементи дошки
+  // ua: автоматично зберігаємо елементи дошки лише за наявності прав редагування
   useEffect(() => {
     if (
+      !canEdit ||
       !whiteboard ||
       !debouncedDraft ||
       debouncedDraft.boardId !== whiteboard.id ||
@@ -152,11 +170,12 @@ export function useWhiteboardController(
         },
       },
     );
-  }, [debouncedDraft, whiteboard, updateWhiteboard]);
+  }, [canEdit, debouncedDraft, whiteboard, updateWhiteboard]);
 
-  // ua: автоматично зберігаємо налаштування Excalidraw
+  // ua: автоматично зберігаємо налаштування Excalidraw лише за наявності прав редагування
   useEffect(() => {
     if (
+      !canEdit ||
       !whiteboard ||
       !debouncedDraft ||
       debouncedDraft.boardId !== whiteboard.id ||
@@ -191,12 +210,12 @@ export function useWhiteboardController(
         },
       },
     );
-  }, [debouncedDraft, whiteboard, updateWhiteboardSettings]);
+  }, [canEdit, debouncedDraft, whiteboard, updateWhiteboardSettings]);
 
   // ua: оновлюємо локальну чернетку після змін на полотні
   const handleChange = useCallback(
     (nextElements: WhiteboardElements, nextAppState: WhiteboardAppState) => {
-      if (isReadOnly || !initialData) {
+      if (!canEdit || isReadOnly || !initialData) {
         return;
       }
 
@@ -219,13 +238,13 @@ export function useWhiteboardController(
         };
       });
     },
-    [initialData, isReadOnly],
+    [canEdit, initialData, isReadOnly],
   );
 
   // ua: тема оновлюється в чернетці й зберігається загальним механізмом
   const handleThemeChange = useCallback(
     (theme: WhiteboardTheme) => {
-      if (!initialData) {
+      if (!canEdit || !initialData) {
         return;
       }
 
@@ -248,7 +267,20 @@ export function useWhiteboardController(
         };
       });
     },
-    [initialData],
+    [canEdit, initialData],
+  );
+
+  // ua: користувач без прав редагування не може вимкнути режим перегляду
+  const setIsReadOnly = useCallback(
+    (value: boolean) => {
+      if (!canEdit) {
+        setManualReadOnly(true);
+        return;
+      }
+
+      setManualReadOnly(value);
+    },
+    [canEdit],
   );
 
   const retryLoading = useCallback(() => {
@@ -265,6 +297,8 @@ export function useWhiteboardController(
 
   return {
     whiteboard,
+    role,
+    canEdit,
     elements,
     appState,
     isLoading: whiteboardQuery.isLoading,

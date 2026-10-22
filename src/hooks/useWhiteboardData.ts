@@ -11,7 +11,7 @@ import { whiteboardService } from '@/services/whiteboard.service';
 import type {
   UpdateWhiteboardPayload,
   UpdateWhiteboardSettingsPayload,
-  Whiteboard,
+  WorkspaceWhiteboardData,
 } from '@/types/whiteboard';
 
 // ua: хук для отримання або створення дошки конкретного воркспейсу
@@ -36,17 +36,20 @@ export const useUpdateWhiteboard = (workspaceId: string) => {
 
     onSuccess: (updatedData) => {
       // ua: оновлюємо лише елементи, щоб не перезаписати новіші налаштування
-      queryClient.setQueryData<Whiteboard | null>(
+      queryClient.setQueryData<WorkspaceWhiteboardData | null>(
         ['workspace-whiteboard', workspaceId],
         (currentData) => {
           if (!currentData) {
-            return updatedData;
+            return null;
           }
 
           return {
             ...currentData,
-            elements: updatedData.elements,
-            updatedAt: updatedData.updatedAt,
+            whiteboard: {
+              ...currentData.whiteboard,
+              elements: updatedData.elements,
+              updatedAt: updatedData.updatedAt,
+            },
           };
         },
       );
@@ -75,17 +78,20 @@ export const useUpdateWhiteboardSettings = (workspaceId: string) => {
 
     onSuccess: (updatedData) => {
       // ua: оновлюємо лише налаштування, не перезаписуючи новіші елементи
-      queryClient.setQueryData<Whiteboard | null>(
+      queryClient.setQueryData<WorkspaceWhiteboardData | null>(
         ['workspace-whiteboard', workspaceId],
         (currentData) => {
           if (!currentData) {
-            return updatedData;
+            return null;
           }
 
           return {
             ...currentData,
-            settings: updatedData.settings,
-            updatedAt: updatedData.updatedAt,
+            whiteboard: {
+              ...currentData.whiteboard,
+              settings: updatedData.settings,
+              updatedAt: updatedData.updatedAt,
+            },
           };
         },
       );

@@ -1,5 +1,3 @@
-// types whiteboard
-
 import type {
   WhiteboardAppState,
   WhiteboardContent, // all content
@@ -12,6 +10,9 @@ export type WhiteboardSettings = Partial<WhiteboardAppState> & {
   theme?: WhiteboardTheme;
 };
 
+// ua: ролі користувачів у воркспейсі
+export type WhiteboardRole = 'Owner' | 'Admin' | 'Editor' | 'Viewer' | 'Guest';
+
 // ua: опис моделі інтерактивної дошки з бази даних
 export interface Whiteboard {
   id: string;
@@ -23,12 +24,16 @@ export interface Whiteboard {
   updatedAt: string;
 }
 
-// ua: типізація відповідей API
+// ua: дані дошки разом із роллю поточного користувача
+export interface WorkspaceWhiteboardData {
+  whiteboard: Whiteboard;
+  role: WhiteboardRole;
+}
+
+// ua: типізація відповіді API
 export interface WhiteboardResponse {
   success: boolean;
-  data: {
-    whiteboard: Whiteboard;
-  };
+  data: WorkspaceWhiteboardData;
 }
 
 // ua: дані, які надсилаються для збереження елементів дошки

@@ -1,3 +1,5 @@
+// comp whiteboard
+
 'use client';
 
 import dynamic from 'next/dynamic';
@@ -24,6 +26,8 @@ export default function WhiteboardWrapper({
 }: WhiteboardWrapperProps) {
   const {
     whiteboard,
+    role,
+    canEdit,
     elements,
     appState,
     isLoading,
@@ -54,8 +58,17 @@ export default function WhiteboardWrapper({
       <WhiteboardHeader
         saveStatus={saveStatus}
         isReadOnly={isReadOnly}
-        onToggleReadOnly={() => setIsReadOnly(!isReadOnly)}
+        onToggleReadOnly={
+          canEdit ? () => setIsReadOnly(!isReadOnly) : undefined
+        }
       />
+
+      {!canEdit && (
+        <p className="text-sm text-muted-foreground">
+          View-only access
+          {role ? ` (${role})` : ''}
+        </p>
+      )}
 
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl">
         <WhiteboardErrorBoundary>
@@ -70,7 +83,11 @@ export default function WhiteboardWrapper({
       </div>
 
       <footer className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>Changes are saved automatically after 2 seconds.</p>
+        <p>
+          {canEdit
+            ? 'Changes are saved automatically after 2 seconds.'
+            : 'You have read-only access to this whiteboard.'}
+        </p>
         <p>Board ID: {whiteboard.id}</p>
       </footer>
     </section>
