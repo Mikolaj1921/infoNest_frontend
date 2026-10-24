@@ -171,3 +171,53 @@ export const useReorderTasks = (workspaceId: string) => {
     },
   });
 };
+
+// dnd doc
+
+// link doc (закріплення документа)
+export const useLinkDocument = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      documentId,
+    }: {
+      taskId: string;
+      documentId: string;
+    }) => taskService.linkDocument(taskId, workspaceId, documentId),
+    onSuccess: () => {
+      toast.success('Document attached successfully');
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-kanban', workspaceId],
+      });
+    },
+    onError: () => {
+      toast.error('Failed to attach document');
+    },
+  });
+};
+
+// unlinked (відкріплення документа)
+export const useUnlinkDocument = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      documentId,
+    }: {
+      taskId: string;
+      documentId: string;
+    }) => taskService.unlinkDocument(taskId, workspaceId, documentId),
+    onSuccess: () => {
+      toast.success('Document detached successfully');
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-kanban', workspaceId],
+      });
+    },
+    onError: () => {
+      toast.error('Failed to detach document');
+    },
+  });
+};

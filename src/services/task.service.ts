@@ -95,4 +95,28 @@ export const taskService = {
     );
     return data.data.category;
   },
+
+  // dnd doc
+
+  linkDocument: async (
+    taskId: string,
+    workspaceId: string,
+    documentId: string,
+  ): Promise<BoardTask> => {
+    const { data } = await api.post<BoardTaskResponse>(
+      `/board-tasks/${taskId}/attachments?workspaceId=${encodeURIComponent(workspaceId)}`,
+      { documentId },
+    );
+    return data.data.task;
+  },
+
+  unlinkDocument: async (
+    taskId: string,
+    workspaceId: string,
+    documentId: string,
+  ): Promise<void> => {
+    await api.delete(
+      `/board-tasks/${taskId}/attachments/${documentId}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    );
+  },
 };
