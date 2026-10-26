@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
-import { WorkspaceFolderItem } from '@/types/kanban';
+import { WorkspaceFolderItem, TaskCategory } from '@/types/kanban';
 import { useModal } from '@/hooks/use-modal-store';
 // hooks
 import { useWorkspaceKanban } from '@/hooks/useKanbanData';
@@ -69,7 +69,17 @@ export const EditTaskModal = () => {
   const [isTreeOpen, setIsTreeOpen] = useState(false);
 
   // динамічне відображення змін без закриття модалки( зміни на ходу )
-  const { data: categories } = useWorkspaceKanban(workspaceId);
+  const workspaceKanbanQuery = useWorkspaceKanban(workspaceId);
+  const categories = workspaceKanbanQuery.data as unknown as
+    | TaskCategory[]
+    | undefined;
+
+  // Оскільки роль зазвичай передається у відповіді воркспейсу або структури,
+  // якщо вона приходить у query то беремо її, інакше по дефолту даємо Editor для сумісності
+  // eslint-disable-next-line
+  const userRole = (workspaceKanbanQuery.data as any)?.role || 'Editor';
+  const canEdit =
+    userRole === 'Owner' || userRole === 'Admin' || userRole === 'Editor';
 
   // зміни в вікні( на ходу )
   const task = useMemo(() => {
@@ -311,8 +321,9 @@ export const EditTaskModal = () => {
             </label>
             <button
               type="button"
+              disabled={!canEdit}
               onClick={() => setIsTreeOpen(!isTreeOpen)}
-              className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs flex items-center justify-between transition text-muted-foreground hover:text-foreground hover:bg-accent/20 cursor-pointer"
+              className="w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2 text-xs flex items-center justify-between transition text-muted-foreground hover:text-foreground hover:bg-accent/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-2">
                 <FontAwesomeIcon
@@ -485,20 +496,22 @@ export const EditTaskModal = () => {
                       </span>
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        unlinkDocumentMutation.mutate({
-                          taskId: task.id,
-                          documentId: doc.id,
-                        })
-                      }
-                      disabled={unlinkDocumentMutation.isPending}
-                      className="h-6 w-6 rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 flex items-center justify-center transition shrink-0 cursor-pointer disabled:opacity-40"
-                      title="Detach document"
-                    >
-                      <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
-                    </button>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          unlinkDocumentMutation.mutate({
+                            taskId: task.id,
+                            documentId: doc.id,
+                          })
+                        }
+                        disabled={unlinkDocumentMutation.isPending}
+                        className="h-6 w-6 rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 flex items-center justify-center transition shrink-0 cursor-pointer disabled:opacity-40"
+                        title="Detach document"
+                      >
+                        <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
