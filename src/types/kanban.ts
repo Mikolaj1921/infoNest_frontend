@@ -50,3 +50,16 @@ export interface TaskCategoryResponse {
     category: TaskCategory;
   };
 }
+
+// doc dnd
+
+export interface WorkspaceDocItem {
+  id: string;
+  title: string;
+}
+
+export interface WorkspaceFolderItem {
+  id: string;
+  name: string;
+  documents: WorkspaceDocItem[];
+}
