@@ -6,7 +6,11 @@ import React from 'react';
 import { BoardTask, TaskPriority } from '@/types/kanban';
 import { useModal } from '@/hooks/use-modal-store';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock, faCircle } from '@fortawesome/free-solid-svg-icons';
+import {
+  faClock,
+  faCircle,
+  faPaperclip,
+} from '@fortawesome/free-solid-svg-icons';
 
 interface TaskCardProps {
   task: BoardTask;
@@ -89,7 +93,7 @@ export const TaskCard = ({
         </p>
       )}
 
-      <div className="flex items-center justify-between pt-1 border-t border-border/20 text-[10px] text-muted-foreground">
+      <div className="flex items-center justify-between pt-1  border-t border-border/20 text-[10px] text-muted-foreground">
         <div className="flex items-center gap-1">
           <FontAwesomeIcon icon={faClock} className="h-3 w-3 opacity-60" />
           <span>
@@ -98,6 +102,16 @@ export const TaskCard = ({
               : 'No due date'}
           </span>
         </div>
+
+        {task.documents && task.documents.length > 0 && (
+          <div
+            className="flex items-center gap-1 text-primary/80 bg-primary/5 border border-primary/10 ml-20 px-1.5 py-0.5 rounded-md font-bold shrink-0"
+            title={`Attached documents: ${task.documents.length}`}
+          >
+            <FontAwesomeIcon icon={faPaperclip} className="h-2.5 w-2.5" />
+            <span>{task.documents.length}</span>
+          </div>
+        )}
 
         <div className="h-5 w-5 rounded-full bg-secondary/80 border border-border/50 flex items-center justify-center font-bold text-[9px] text-foreground/80 shrink-0">
           U
