@@ -11,18 +11,28 @@ import { toast } from 'sonner';
 
 // component
 import { Toolbar } from './Toolbar';
-import { useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 interface EditorProps {
   initialContent: string;
   onContentChange: (htmlContent: string, isDirty: boolean) => void;
+  editable?: boolean;
 }
 
-export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
+export const Editor = ({
+  initialContent,
+  onContentChange,
+  editable = true,
+}: EditorProps) => {
   const initialContentRef = useRef(initialContent);
+  const onContentChangeRef = useRef(onContentChange);
+
+  useEffect(() => {
+    onContentChangeRef.current = onContentChange;
+  }, [onContentChange]);
 
   const editor = useEditor({
-    // configuring the editor with extensions and initial content
+    // configuring the editor with extensions
 
     // types
     // Heading, Bold, Italic - StarterKit
@@ -49,50 +59,61 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
     ],
     // content for the editor
     content: initialContent,
+    editable,
     immediatelyRender: false, // ua:  відкладений рендеринг редактора для покращення продуктивності
+
     // onUpdate callback to handle content changes
     onUpdate: ({ editor: currentEditor }) => {
       const currentHTML = currentEditor.getHTML();
       const isDirty = currentHTML !== initialContentRef.current;
-      onContentChange(currentHTML, isDirty);
+
+      onContentChangeRef.current(currentHTML, isDirty);
     },
   });
 
   // update, ua: функція для завантаження та вставки зображення в редактор
-  const uploadAndInsertImage = async (file: File) => {
-    if (!editor) return;
+  const uploadAndInsertImage = useCallback(
+    async (file: File) => {
+      if (!editor || !editor.isEditable) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Allow only images to be uploaded (PNG, JPG, WebP...)');
-      return;
-    }
+      if (!file.type.startsWith('image/')) {
+        toast.error('Allow only images to be uploaded (PNG, JPG, WebP...)');
+        return;
+      }
 
-    const toastId = toast.loading(`Uploading image: ${file.name}...`);
+      const toastId = toast.loading(`Uploading image: ${file.name}...`);
 
-    try {
-      const uploadedFile = await fileService.uploadFile(
-        'inline-editor-image',
-        file,
-        () => {},
-      );
+      try {
+        const uploadedFile = await fileService.uploadFile(
+          'inline-editor-image',
+          file,
+          () => {},
+        );
 
-      editor
-        .chain()
-        .focus()
-        .setImage({ src: uploadedFile.url, alt: file.name })
-        .run();
-      toast.success('Image inserted successfully', { id: toastId });
-    } catch (error) {
-      console.error('Failed to upload inline image:', error);
-      toast.error('Failed to upload image to text', { id: toastId });
-    }
-  };
+        editor
+          .chain()
+          .focus()
+          .setImage({ src: uploadedFile.url, alt: file.name })
+          .run();
+
+        toast.success('Image inserted successfully', { id: toastId });
+      } catch (error) {
+        console.error('Failed to upload inline image:', error);
+        toast.error('Failed to upload image to text', { id: toastId });
+      }
+    },
+    [editor],
+  );
 
   // update: ua: додавання обробників подій для перетягування та вставки зображень у редактор
-  if (editor && !editor.options.editorProps.handleDrop) {
+  useEffect(() => {
+    if (!editor) return;
+
     editor.setOptions({
       editorProps: {
-        handleDrop: (view, event) => {
+        handleDrop: (_view, event) => {
+          if (!editor.isEditable) return false;
+
           if (
             event.dataTransfer &&
             event.dataTransfer.files &&
@@ -105,36 +126,44 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
 
             if (imageFile) {
               event.preventDefault();
-              uploadAndInsertImage(imageFile);
+              void uploadAndInsertImage(imageFile);
               return true;
             }
           }
+
           return false;
         },
-        handlePaste: (view, event) => {
+
+        handlePaste: (_view, event) => {
+          if (!editor.isEditable) return false;
+
           const items = Array.from(event.clipboardData?.items || []);
 
           const imageItem = items.find((item) =>
             item.type.startsWith('image/'),
           );
+
           if (imageItem) {
             const file = imageItem.getAsFile();
+
             if (file) {
               event.preventDefault();
-              uploadAndInsertImage(file);
+              void uploadAndInsertImage(file);
               return true;
             }
           }
 
           const textData = event.clipboardData?.getData('text/plain') || '';
+
           if (
             textData.startsWith('data:image/') &&
             textData.includes(';base64,')
           ) {
             const fileFromBase64 = convertBase64ToFile(textData);
+
             if (fileFromBase64) {
               event.preventDefault();
-              uploadAndInsertImage(fileFromBase64);
+              void uploadAndInsertImage(fileFromBase64);
               return true;
             }
           }
@@ -143,21 +172,30 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
         },
       },
     });
-  }
+  }, [editor, uploadAndInsertImage]);
 
   useEffect(() => {
     if (!editor) return;
 
+    // ua: синхронізація вмісту після завантаження документа або збереження
+    initialContentRef.current = initialContent;
+
     if (initialContent !== editor.getHTML()) {
-      initialContentRef.current = initialContent;
-      editor.commands.setContent(initialContent, { emitUpdate: false }); // full param (emitUpdate)
+      editor.commands.setContent(initialContent, { emitUpdate: false });
     }
   }, [initialContent, editor]);
+
+  // ua: блокування редагування під час перегляду старої ревізії
+  useEffect(() => {
+    if (!editor) return;
+
+    editor.setEditable(editable);
+  }, [editor, editable]);
 
   useEffect(() => {
     // попередження про незбережені зміни при закритті вкладки
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (!editor) return;
+      if (!editor || !editor.isEditable) return;
 
       const isDirty = editor.getHTML() !== initialContentRef.current;
 
@@ -179,14 +217,21 @@ export const Editor = ({ initialContent, onContentChange }: EditorProps) => {
   if (!editor) {
     return null;
   }
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4 space-y-4 text-left">
-      <Toolbar editor={editor} />
+      {editable && <Toolbar editor={editor} />}
+
+      {!editable && (
+        <div className="text-xs text-amber-500 font-medium">
+          Перегляд лише для читання
+        </div>
+      )}
 
       <div className="min-h-[400px] w-full rounded-2xl border border-border bg-card/20 p-6 backdrop-blur-md shadow-inner focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-300">
         <EditorContent
           editor={editor}
-          className="prose prose-invert max-w-none focus:outline-none"
+          className="prose prose-invert max-w-none focus:outline-none "
         />
       </div>
     </div>

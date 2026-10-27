@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 interface UseUpdateDocumentOptions {
   onSuccessCb?: () => void; // ua: колбек для синхр тексту на сторінці після збереження
+  showToast?: boolean;
 }
 
 // ua: кастомний хук для мутації ручного збереження тексту документа в базу
@@ -21,16 +22,25 @@ export const useUpdateDocument = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    // ua: метод сервісу для відправкипетча на бек
+    // ua: метод сервісу для відправки петча на бек
     mutationFn: (dto: UpdateDocumentDTO) =>
       documentService.updateDocument(docId, dto),
 
     onSuccess: () => {
       // апдейтимо кеш структури воркспейсу
-      queryClient.invalidateQueries({ queryKey: ['workspace-structure'] });
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-structure'],
+      });
+
+      // ua: оновлюємо кеш конкретного документа після збереження
+      queryClient.invalidateQueries({
+        queryKey: ['document', docId],
+      });
 
       // ua: повідомлення про успішне збереження
-      toast.success('Changes saved successfully');
+      if (options?.showToast !== false) {
+        toast.success('Changes saved successfully');
+      }
 
       // ua: викликаємо колбек - синхр статусу
       if (options?.onSuccessCb) {

@@ -264,9 +264,11 @@ export default function WorkspacePage() {
           </button>
         </div>
 
+        {/* workspace id - test check
         <div className="text-[10px] text-muted-foreground/40 font-mono tracking-wider bg-secondary/20 px-2.5 py-1 rounded-md border border-border/55">
           Workspace ID: {workspaceId}
         </div>
+        */}
       </div>
 
       {/* fix: Add functional to doc page*/}
