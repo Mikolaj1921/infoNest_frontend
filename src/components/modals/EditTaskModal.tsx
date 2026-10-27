@@ -7,6 +7,7 @@ import React, {
   useState,
   useMemo,
 } from 'react';
+
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -22,7 +23,7 @@ import {
   useLinkDocument,
   useUnlinkDocument,
 } from '@/hooks/useKanbanData'; // ua: хуки оновлення та видалення
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 // icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -50,6 +51,7 @@ type EditTaskFormValues = z.output<typeof editTaskSchema>;
 
 export const EditTaskModal = () => {
   const params = useParams();
+  const router = useRouter();
 
   const workspaceId = typeof params?.id === 'string' ? params.id : '';
 
@@ -478,10 +480,9 @@ export const EditTaskModal = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        if (data.onConfirm) {
-                          data.onConfirm();
-                        }
-
+                        router.push(
+                          `/workspaces/${workspaceId}/documents/${doc.id}`,
+                        );
                         onClose();
                       }}
                       className="flex items-center gap-2 truncate min-w-0 text-left hover:text-primary hover:underline cursor-pointer transition-colors"
