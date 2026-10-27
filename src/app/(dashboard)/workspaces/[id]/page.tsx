@@ -4,12 +4,15 @@
 
 import { useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFolderOpen,
   faTasks,
   faPlus,
   faChalkboard,
+  faFileLines,
+  faFolder,
 } from '@fortawesome/free-solid-svg-icons';
 // dnd libs
 import { DragDropProvider } from '@dnd-kit/react';
@@ -23,6 +26,7 @@ import {
   useCreateColumn,
   useReorderTasks,
 } from '@/hooks/useKanbanData';
+import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
 // modals
 import { BoardColumn } from '@/features/kanban/components/BoardColumn';
 // whiteboard
@@ -56,6 +60,11 @@ export default function WorkspacePage() {
   const queryKey = ['workspace-kanban', workspaceId];
 
   const { data: categories, isLoading } = useWorkspaceKanban(workspaceId);
+  const {
+    data: documentCategories,
+    isLoading: isDocumentsLoading,
+    isError: isDocumentsError,
+  } = useWorkspaceStructure(workspaceId);
 
   const createColumnMutation = useCreateColumn(workspaceId);
   const reorderTasksMutation = useReorderTasks(workspaceId);
@@ -260,24 +269,142 @@ export default function WorkspacePage() {
         </div>
       </div>
 
+      {/* fix: Add functional to doc page*/}
       {activeTab === 'documents' && (
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="max-w-md space-y-4">
-            <div className="mx-auto h-12 w-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
-              <FontAwesomeIcon icon={faFolderOpen} className="h-5 w-5" />
-            </div>
-
-            <div className="space-y-1.5">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-6 text-left">
+          <div className="flex items-center justify-between gap-4">
+            <div>
               <h2 className="text-xl font-bold tracking-tight text-foreground">
-                Welcome to your workspace!
+                Documents
               </h2>
-
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                Select an existing document in the left sidebar or create a new
-                folder to start organizing your knowledge.
+              <p className="mt-1 text-sm text-muted-foreground">
+                Browse your knowledge base and organize documents by category.
               </p>
             </div>
+
+            <button
+              type="button"
+              onClick={() => onOpen('createCategory')}
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition cursor-pointer"
+            >
+              <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
+              <span>New Category</span>
+            </button>
           </div>
+
+          {isDocumentsLoading ? (
+            <div className="py-12 text-center text-sm text-muted-foreground animate-pulse">
+              Loading documents...
+            </div>
+          ) : isDocumentsError ? (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center">
+              <p className="text-sm font-medium text-destructive">
+                Failed to load documents.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Please try again in a moment.
+              </p>
+            </div>
+          ) : documentCategories?.length ? (
+            <div className="space-y-6">
+              {documentCategories.map((category) => (
+                <section
+                  key={category.id}
+                  className="overflow-hidden rounded-2xl border border-border/60 bg-card/40"
+                >
+                  <div className="flex items-center gap-3 border-b border-border/40 bg-secondary/20 px-4 py-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <FontAwesomeIcon icon={faFolder} className="h-4 w-4" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-bold text-foreground">
+                        {category.name}
+                      </h3>
+
+                      <p className="text-xs text-muted-foreground">
+                        {category.documents.length}{' '}
+                        {category.documents.length === 1
+                          ? 'document'
+                          : 'documents'}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onOpen('createDocument', {
+                          categoryId: category.id,
+                          categoryName: category.name,
+                        })
+                      }
+                      className="flex shrink-0 items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground transition  hover:text-primary"
+                      title={`Add document to ${category.name}`}
+                    >
+                      <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
+                      <span className="hidden sm:inline">Add Document</span>
+                    </button>
+                  </div>
+
+                  {category.documents.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {category.documents.map((doc) => (
+                        <Link
+                          key={doc.id}
+                          href={`/workspaces/${workspaceId}/documents/${doc.id}`}
+                          className="group flex min-w-0 items-center gap-3 rounded-xl border border-border/50 bg-background/50 p-3 transition hover:border-primary/30 hover:bg-accent/30"
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <FontAwesomeIcon
+                              icon={faFileLines}
+                              className="h-4 w-4"
+                            />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
+                              {doc.title}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Open document
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="px-4 py-5 text-xs italic text-muted-foreground">
+                      This category is empty.
+                    </p>
+                  )}
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 px-6 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <FontAwesomeIcon icon={faFolderOpen} className="h-5 w-5" />
+              </div>
+
+              <h3 className="mt-4 text-base font-bold text-foreground">
+                Your knowledge base is empty
+              </h3>
+
+              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                Create a category in the sidebar to start organizing your
+                documents.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => onOpen('createCategory')}
+                className="mt-4 flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition cursor-pointer"
+              >
+                <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
+                Create Category
+              </button>
+            </div>
+          )}
         </div>
       )}
 

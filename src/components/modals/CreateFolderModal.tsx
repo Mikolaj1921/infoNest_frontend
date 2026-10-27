@@ -8,14 +8,19 @@ import { useModal } from '../../hooks/use-modal-store';
 import { useParams } from 'next/navigation';
 
 // mutation hook
-import { useCreateCategory } from '@/features/documents/hooks/use-category-mutations'; // ua: додано
+import { useCreateCategory } from '@/features/documents/hooks/use-category-mutations';
 
-// validation schema
+// validation schema - fixed (add min 3 char chech)
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { message: 'Name is required' })
-    .max(30, { message: 'Name cannot exceed 30 characters' }),
+    .trim()
+    .min(3, {
+      message: 'Category name must be at least 3 characters long.',
+    })
+    .max(30, {
+      message: 'Category name cannot exceed 30 characters.',
+    }),
 });
 
 // ua: типи для форми
@@ -27,7 +32,7 @@ export const CreateFolderModal = () => {
 
   const workspaceId = typeof params?.id === 'string' ? params.id : '';
 
-  const { mutateAsync: createCategory, isPending } = useCreateCategory(); // ua: виклик хук
+  const { mutateAsync: createCategory, isPending } = useCreateCategory();
 
   const isModalOpen = isOpen && type === 'createCategory';
 
@@ -41,14 +46,15 @@ export const CreateFolderModal = () => {
     defaultValues: { name: '' },
   });
 
-  // for creating a new category
+  // ua: створення нової категорії
   const onSubmit = async (values: FormValues) => {
     try {
-      await createCategory({ name: values.name });
+      await createCategory({ name: values.name.trim() });
       reset();
       onClose();
     } catch (error) {
-      console.error(error);
+      // ua: помилка вже обробляється хуком мутації
+      console.error('Failed to create category:', error);
     }
   };
 
@@ -65,6 +71,7 @@ export const CreateFolderModal = () => {
         <h2 className="text-xl font-bold text-foreground mb-1 text-left">
           Create New Category
         </h2>
+
         <p className="text-sm text-muted-foreground mb-4 text-left">
           Add a new category to organize your documents in the workspace.
         </p>
@@ -73,39 +80,55 @@ export const CreateFolderModal = () => {
           <div className="space-y-4 text-left">
             <div className="rounded-md bg-amber-500/10 p-3 border border-amber-500/20">
               <p className="text-sm text-amber-500 font-medium">
-                Попередження: Не обрано робочий простір.
+                Warning: No workspace selected.
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Створення папок (категорій) можливе лише всередині конкретного
-                воркспейсу. Будь ласка, оберіть або створіть воркспейс у
-                верхньому меню перед налаштуванням структури.
+                Folders (categories) can only be created within a specific
+                workspace. Please select or create a workspace in the top menu
+                before setting up the structure.
               </p>
             </div>
+
             <div className="flex justify-end pt-2">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm"
               >
-                Зрозуміло
+                Of cource
               </button>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5 text-left">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">
+              <label
+                htmlFor="category-name"
+                className="text-xs font-semibold uppercase text-muted-foreground"
+              >
                 Category Name
               </label>
+
               <input
+                id="category-name"
                 {...register('name')}
                 type="text"
                 autoFocus
+                maxLength={30}
+                aria-invalid={!!errors.name}
+                aria-describedby={
+                  errors.name ? 'category-name-error' : undefined
+                }
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 placeholder="For example: Marketing, Sprint 5..."
               />
+
               {errors.name && (
-                <p className="text-xs font-medium text-destructive mt-1">
+                <p
+                  id="category-name-error"
+                  role="alert"
+                  className="text-xs font-medium text-destructive mt-1"
+                >
                   {errors.name.message}
                 </p>
               )}
@@ -119,6 +142,7 @@ export const CreateFolderModal = () => {
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
                 disabled={isPending}
