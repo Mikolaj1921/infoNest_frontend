@@ -13,6 +13,8 @@ import {
   faChalkboard,
   faFileLines,
   faFolder,
+  faPen,
+  faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 // dnd libs
 import { DragDropProvider } from '@dnd-kit/react';
@@ -332,20 +334,54 @@ export default function WorkspacePage() {
                       </p>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onOpen('createDocument', {
-                          categoryId: category.id,
-                          categoryName: category.name,
-                        })
-                      }
-                      className="flex shrink-0 items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground transition  hover:text-primary"
-                      title={`Add document to ${category.name}`}
-                    >
-                      <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
-                      <span className="hidden sm:inline">Add Document</span>
-                    </button>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onOpen('editCategory', {
+                            categoryId: category.id,
+                            categoryName: category.name,
+                          })
+                        }
+                        className="flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground transition hover:text-primary"
+                        title={`Edit category ${category.name}`}
+                        aria-label={`Edit category ${category.name}`}
+                      >
+                        <FontAwesomeIcon icon={faPen} className="h-3 w-3" />
+                        <span className="hidden sm:inline">Edit</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onOpen('deleteCategory', {
+                            categoryId: category.id,
+                            categoryName: category.name,
+                          })
+                        }
+                        className="flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-destructive transition hover:bg-destructive/5"
+                        title={`Delete category ${category.name}`}
+                        aria-label={`Delete category ${category.name}`}
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onOpen('createDocument', {
+                            categoryId: category.id,
+                            categoryName: category.name,
+                          })
+                        }
+                        className="flex shrink-0 items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-xs font-semibold text-foreground transition hover:text-primary"
+                        title={`Add document to ${category.name}`}
+                      >
+                        <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
+                        <span className="hidden sm:inline">Add Document</span>
+                      </button>
+                    </div>
                   </div>
 
                   {category.documents.length > 0 ? (
