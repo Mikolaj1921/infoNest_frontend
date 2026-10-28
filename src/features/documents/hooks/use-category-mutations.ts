@@ -3,7 +3,10 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { categoryService } from '@/services/category.service';
+import {
+  categoryService,
+  UpdateCategoryDTO,
+} from '@/services/category.service';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -25,6 +28,53 @@ export const useCreateCategory = () => {
     },
     onError: () => {
       toast.error('Failed to create folder. Please try again.');
+    },
+  });
+};
+
+// ua: хук для оновлення назви категорії
+export const useUpdateCategory = () => {
+  const queryClient = useQueryClient();
+  const params = useParams();
+
+  const workspaceId = typeof params?.id === 'string' ? params.id : '';
+
+  return useMutation({
+    mutationFn: ({
+      categoryId,
+      dto,
+    }: {
+      categoryId: string;
+      dto: UpdateCategoryDTO;
+    }) => categoryService.updateCategory(categoryId, dto),
+
+    onSuccess: (updatedCategory) => {
+      // ua: оновлюємо дерево документів у сайдбарі та на сторінці воркспейсу
+      queryClient.setQueryData(
+        ['workspace-structure', workspaceId],
+        (current: unknown) => {
+          if (!Array.isArray(current)) {
+            return current;
+          }
+
+          return current.map((category) =>
+            category.id === updatedCategory.id
+              ? { ...category, ...updatedCategory }
+              : category,
+          );
+        },
+      );
+
+      // ua: синхронізуємо структуру з бекендом
+      queryClient.invalidateQueries({
+        queryKey: ['workspace-structure', workspaceId],
+      });
+
+      toast.success('Folder renamed successfully');
+    },
+
+    onError: () => {
+      toast.error('Failed to rename folder. Please try again.');
     },
   });
 };

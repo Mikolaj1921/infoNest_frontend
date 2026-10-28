@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import { CreateFolderModal } from '@/components/modals/CreateFolderModal';
+import { EditCategoryModal } from '@/components/modals/EditCategoryModal';
 import { DeleteCategoryConfirmModal } from '@/components/modals/DeleteCategoryConfirmModal';
 // ua: модалки для документів
 import { CreateDocumentModal } from '@/components/modals/CreateDocumentModal';
@@ -42,6 +43,7 @@ export const ModalProvider = () => {
     <>
       <CreateFolderModal />
       <DeleteCategoryConfirmModal />
+      <EditCategoryModal />
       <CreateDocumentModal />
       <DeleteDocumentConfirmModal />
       <RevisionHistorySidebar />

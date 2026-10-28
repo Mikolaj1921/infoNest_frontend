@@ -14,6 +14,7 @@ import {
   faChevronDown,
   faEllipsisVertical,
   faPlus,
+  faPen,
 } from '@fortawesome/free-solid-svg-icons';
 
 // ua: компонент для відображення 1 doc
@@ -102,7 +103,7 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
           <button
             type="button"
             onClick={(e) => {
-              e.stopPropagation(); // ua: запобігаємо закриттю папки
+              e.stopPropagation();
               onOpen('createDocument', {
                 categoryId: category.id,
                 categoryName: category.name,
@@ -114,17 +115,34 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
             <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
           </button>
 
+          {/* ua: кнопка для перейменування категорії */}
           <button
             type="button"
             onClick={(e) => {
-              e.stopPropagation(); // ua: зупинка спливання події, щоб не викликати toggleFolder при кліку на кнопку
+              e.stopPropagation();
+              onOpen('editCategory', {
+                categoryId: category.id,
+                categoryName: category.name,
+              });
+            }}
+            className="h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
+            title="Rename folder"
+          >
+            <FontAwesomeIcon icon={faPen} className="h-3 w-3" />
+          </button>
+
+          {/* ua: кнопка керування папкою */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
               onOpen('deleteCategory', {
                 categoryId: category.id,
                 categoryName: category.name,
               });
             }}
             className="opacity-0 group-hover/folder:opacity-100 h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
-            title="Manage folder"
+            title="Delete folder"
           >
             <FontAwesomeIcon icon={faEllipsisVertical} className="h-3 w-3" />
           </button>

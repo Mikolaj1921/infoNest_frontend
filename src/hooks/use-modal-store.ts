@@ -7,6 +7,7 @@ import { BoardTask } from '@/types/kanban';
 // ua: типи модальних вікон
 export type ModalType =
   | 'createCategory'
+  | 'editCategory'
   | 'deleteCategory'
   | 'createDocument'
   | 'deleteDocument'

@@ -6,9 +6,14 @@ export interface CreateCategoryDTO {
   workspaceId: string; // ua: додаємо обов'язкове поле зв'язку з воркспейсом
 }
 
+// ua: DTO для оновлення назви категорії
+export interface UpdateCategoryDTO {
+  name: string;
+}
+
 export interface CategoryActionResponse {
   success: boolean;
-  data: WorkspaceCategory;
+  data: WorkspaceCategory | { category: WorkspaceCategory };
 }
 
 export const categoryService = {
@@ -23,12 +28,44 @@ export const categoryService = {
       workspaceId,
     });
 
-    const res = data as CategoryActionResponse | null;
-    if (res && typeof res === 'object' && res.success === true && res.data) {
-      return res.data;
+    const res = data;
+
+    if (res?.success && res.data) {
+      const categoryData = res.data;
+
+      if ('category' in categoryData) {
+        return categoryData.category;
+      }
+
+      return categoryData;
     }
 
     throw new Error('Invalid response structure during category creation');
+  },
+
+  // ua: оновлення назви категорії
+  updateCategory: async (
+    categoryId: string,
+    dto: UpdateCategoryDTO,
+  ): Promise<WorkspaceCategory> => {
+    const { data } = await api.patch<CategoryActionResponse>(
+      `/categories/${categoryId}`,
+      dto,
+    );
+
+    const res = data;
+
+    if (res?.success && res.data) {
+      const categoryData = res.data;
+
+      if ('category' in categoryData) {
+        return categoryData.category;
+      }
+
+      return categoryData;
+    }
+
+    throw new Error('Invalid response structure during category update');
   },
 
   // ua: повне каскадне видалення папки та всього її вмісту за ID (Статус 204)
