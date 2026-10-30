@@ -65,6 +65,7 @@ export const DocumentAttachments = ({
 }: DocumentAttachmentsProps) => {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { data: files, isLoading, isError } = useDocumentFiles(documentId);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -73,20 +74,23 @@ export const DocumentAttachments = ({
     progress: number;
   } | null>(null);
 
-  // ua: локал стейт для збереження URL картинки та яка передається через лайтбокс
+  // ua: локал стейт для збереження URL картинки та її передачі через лайтбокс
   const [activePreviewImage, setActivePreviewImage] = useState<{
     url: string;
     name: string;
   } | null>(null);
 
+  // ua: видалення файлу
   const handleDeleteFile = async (e: React.MouseEvent, fileId: string) => {
     e.preventDefault();
     e.stopPropagation();
 
     try {
       await fileService.deleteFile(fileId);
+
       toast.success('Файл успішно видалено');
-      queryClient.invalidateQueries({
+
+      await queryClient.invalidateQueries({
         queryKey: ['document-files', documentId],
       });
     } catch (error) {
@@ -95,9 +99,10 @@ export const DocumentAttachments = ({
     }
   };
 
-  // ua: обробник кліку на картку файлу (лайтбокс або скачування)
+  // ua: обробник кліку на картку файлу (лайтбокс або відкриття)
   const handleFileClick = (fileUrl: string, fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
+
     const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(
       extension || '',
     );
@@ -105,22 +110,28 @@ export const DocumentAttachments = ({
     if (isImage) {
       setActivePreviewImage({ url: fileUrl, name: fileName });
     } else {
-      // інший файл - відкриваємо/скачуємо v новій вкладці через р2 лінк
       window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
+  // ua: завантаження файлу
   const processFiles = async (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
+    if (!fileList || fileList.length === 0 || uploadState) return;
+
+    // ua: наразі підтримується завантаження одного файлу за раз
     const file = fileList[0];
 
     const validation = validateUploadedFile(file);
+
     if (!validation.isValid) {
       toast.error(validation.error || 'Помилка валідації файлу');
       return;
     }
 
-    setUploadState({ fileName: file.name, progress: 0 });
+    setUploadState({
+      fileName: file.name,
+      progress: 0,
+    });
 
     try {
       await fileService.uploadFile(documentId, file, (percent) => {
@@ -130,36 +141,50 @@ export const DocumentAttachments = ({
       });
 
       toast.success('Файл успішно завантажено');
-      queryClient.invalidateQueries({
+
+      await queryClient.invalidateQueries({
         queryKey: ['document-files', documentId],
       });
     } catch (error) {
       console.error('Upload failed:', error);
+
       toast.error('Не вдалося завантажити файл');
     } finally {
       setUploadState(null);
+
+      // ua: дозволяємо повторно вибрати той самий файл
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!uploadState) setIsDragging(true);
+
+    if (!uploadState) {
+      setIsDragging(true);
+    }
   };
 
-  const handleDragLeave = () => {
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
     setIsDragging(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+
     if (!uploadState) {
       processFiles(e.dataTransfer.files);
     }
   };
 
   const handleTriggerFileInput = () => {
-    if (!uploadState) fileInputRef.current?.click();
+    if (!uploadState) {
+      fileInputRef.current?.click();
+    }
   };
 
   if (isLoading) {
@@ -187,6 +212,7 @@ export const DocumentAttachments = ({
       <input
         type="file"
         ref={fileInputRef}
+        accept="image/*,application/pdf"
         onChange={(e) => processFiles(e.target.files)}
         className="hidden"
         disabled={!!uploadState}
@@ -198,7 +224,9 @@ export const DocumentAttachments = ({
             icon={faPaperclip}
             className="h-3.5 w-3.5 text-muted-foreground/70"
           />
+
           <span>Attachments</span>
+
           {files && files.length > 0 && (
             <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground font-semibold">
               {files.length}
@@ -238,14 +266,16 @@ export const DocumentAttachments = ({
         >
           <FontAwesomeIcon icon={faArrowUpFromBracket} className="h-4 w-4" />
         </div>
+
         <div className="text-center space-y-0.5">
           <p className="text-xs font-bold text-foreground/80">
             {isDragging
               ? 'Drop file here to upload'
               : 'Drag and drop file here, or click to browse'}
           </p>
+
           <p className="text-[10px] text-muted-foreground font-medium">
-            Any format up to 10 MB (banned executables: .exe, .bat)
+            PDF and images up to 5 MB
           </p>
         </div>
       </div>
@@ -280,6 +310,7 @@ export const DocumentAttachments = ({
                     className="h-4 w-4"
                   />
                 </div>
+
                 <div className="flex flex-col min-w-0 space-y-0.5">
                   <span
                     className="text-xs font-semibold text-foreground/90 truncate group-hover:text-primary transition-colors"
@@ -287,6 +318,7 @@ export const DocumentAttachments = ({
                   >
                     {file.fileName}
                   </span>
+
                   <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1.5">
                     <span>{formatBytes(file.size)}</span>
                     <span className="text-muted-foreground/30">•</span>
@@ -313,18 +345,20 @@ export const DocumentAttachments = ({
         </div>
       )}
 
-      {/* модалка */}
+      {/* ua: модальне вікно перегляду зображення */}
       {activePreviewImage && (
         <div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={() => setActivePreviewImage(null)}
         >
-          {/* Кнопка закриття та назва файлу зверху */}
+          {/* ua: кнопка закриття та назва файлу */}
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between text-white z-10">
             <span className="text-sm font-semibold truncate max-w-[80%] opacity-80">
               {activePreviewImage.name}
             </span>
+
             <button
+              type="button"
               onClick={() => setActivePreviewImage(null)}
               className="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition cursor-pointer"
             >
@@ -332,7 +366,7 @@ export const DocumentAttachments = ({
             </button>
           </div>
 
-          {/* картинка */}
+          {/* ua: зображення */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={activePreviewImage.url}

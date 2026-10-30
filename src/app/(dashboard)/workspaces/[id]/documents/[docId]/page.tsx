@@ -339,7 +339,7 @@ export default function DocumentPage() {
           <button
             type="button"
             onClick={() => setIsHistoryOpen(true)}
-            className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+            className="rounded-md border px-3 py-2 text-sm hover:bg-accent/20"
           >
             Version history
           </button>
@@ -347,7 +347,7 @@ export default function DocumentPage() {
           <button
             type="button"
             onClick={() => setIsDeleteOpen(true)}
-            className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+            className="rounded-md border hover:bg-destructive/5 px-3 py-2 text-sm text-red-600 hover:bg-accent/20"
           >
             Delete
           </button>

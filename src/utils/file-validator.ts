@@ -1,9 +1,10 @@
 // validator file
 
 // ua: типи файлів на клієнті
-const BANNED_EXTENSIONS = ['exe', 'bat', 'cmd', 'sh', 'msi', 'com']; // banned
-const MAX_FILE_SIZE_MB = 10; // max size of file
+const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+const ALLOWED_MIME_TYPES = ['application/pdf'];
 
 export interface FileValidationResult {
   isValid: boolean;
@@ -11,21 +12,20 @@ export interface FileValidationResult {
 }
 
 export const validateUploadedFile = (file: File): FileValidationResult => {
-  const extension = file.name.split('.').pop()?.toLowerCase() || '';
+  const isImage = file.type.startsWith('image/');
+  const isPdf = ALLOWED_MIME_TYPES.includes(file.type);
 
-  // check на небезпечні виконувані розширення
-  if (BANNED_EXTENSIONS.includes(extension)) {
+  if (!isImage && !isPdf) {
     return {
       isValid: false,
-      error: `File type .${extension} is blocked for security reasons.`,
+      error: 'Дозволено завантажувати лише PDF-файли та зображення.',
     };
   }
 
-  // check на ліміт розміру (макс 10 MB)
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return {
       isValid: false,
-      error: `File size exceeds the limit of ${MAX_FILE_SIZE_MB} MB.`,
+      error: `Розмір файлу перевищує ліміт ${MAX_FILE_SIZE_MB} MB.`,
     };
   }
 

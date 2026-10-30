@@ -15,9 +15,6 @@ interface FailedRequest {
 const api = axios.create({
   // ua: додаємо захист на випадок, якщо змінна чомусь пуста
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api', //fix
-  headers: {
-    'Content-Type': 'application/json',
-  },
   withCredentials: true, // musthave for cookies to be sent in cross-origin requests
 });
 
