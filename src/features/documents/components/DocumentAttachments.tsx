@@ -5,24 +5,21 @@ import { useDocumentFiles } from '../hooks/useDocumentFiles';
 import { formatBytes } from '@/utils/file-format';
 import { validateUploadedFile } from '@/utils/file-validator';
 import { UploadProgress } from './UploadProgress';
+import { DocumentPreviewModal } from './DocumentPreviewModal';
 import { formatDistanceToNow } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPaperclip,
   faFilePdf,
-  faFileWord,
-  faFileExcel,
   faFileImage,
-  faFileArchive,
-  faFileAlt,
   faTrashCan,
   faSpinner,
-  faXmark,
   faArrowUpFromBracket,
 } from '@fortawesome/free-solid-svg-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { fileService } from '@/services/file.service';
+import { FileAttachment } from '@/types/document';
 import { toast } from 'sonner';
 
 interface DocumentAttachmentsProps {
@@ -32,32 +29,20 @@ interface DocumentAttachmentsProps {
 const getFileIcon = (fileName: string) => {
   const extension = fileName.split('.').pop()?.toLowerCase();
 
-  switch (extension) {
-    case 'pdf':
-      return faFilePdf;
-    case 'doc':
-    case 'docx':
-      return faFileWord;
-    case 'xls':
-    case 'xlsx':
-    case 'csv':
-      return faFileExcel;
-    case 'png':
-    case 'jpg':
-    case 'jpeg':
-    case 'gif':
-    case 'svg':
-    case 'webp':
-      return faFileImage;
-    case 'zip':
-    case 'rar':
-    case '7z':
-    case 'tar':
-    case 'gz':
-      return faFileArchive;
-    default:
-      return faFileAlt;
-  }
+  if (extension === 'pdf') return faFilePdf;
+
+  return faFileImage;
+};
+
+const isSupportedFile = (fileName: string) => {
+  const extension = fileName.split('.').pop()?.toLowerCase();
+
+  return (
+    extension === 'pdf' ||
+    ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'avif'].includes(
+      extension || '',
+    )
+  );
 };
 
 export const DocumentAttachments = ({
@@ -74,44 +59,45 @@ export const DocumentAttachments = ({
     progress: number;
   } | null>(null);
 
-  // ua: локал стейт для збереження URL картинки та її передачі через лайтбокс
-  const [activePreviewImage, setActivePreviewImage] = useState<{
-    url: string;
-    name: string;
-  } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileAttachment | null>(null);
+
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
 
   // ua: видалення файлу
-  const handleDeleteFile = async (e: React.MouseEvent, fileId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDeleteFile = async (fileId: string): Promise<boolean> => {
+    if (deletingFileId) return false;
+
+    setDeletingFileId(fileId);
 
     try {
       await fileService.deleteFile(fileId);
 
       toast.success('Файл успішно видалено');
 
+      setSelectedFile(null);
+
       await queryClient.invalidateQueries({
         queryKey: ['document-files', documentId],
       });
+
+      return true;
     } catch (error) {
       console.error('Failed to delete file:', error);
       toast.error('Не вдалося видалити файл');
+      return false;
+    } finally {
+      setDeletingFileId(null);
     }
   };
 
-  // ua: обробник кліку на картку файлу (лайтбокс або відкриття)
-  const handleFileClick = (fileUrl: string, fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-
-    const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(
-      extension || '',
-    );
-
-    if (isImage) {
-      setActivePreviewImage({ url: fileUrl, name: fileName });
-    } else {
-      window.open(fileUrl, '_blank', 'noopener,noreferrer');
+  // ua: відкриття файлу в модальному вікні
+  const handleFileClick = (file: FileAttachment) => {
+    if (!isSupportedFile(file.fileName)) {
+      toast.error('Цей формат файлу не підтримується для перегляду.');
+      return;
     }
+
+    setSelectedFile(file);
   };
 
   // ua: завантаження файлу
@@ -125,6 +111,11 @@ export const DocumentAttachments = ({
 
     if (!validation.isValid) {
       toast.error(validation.error || 'Помилка валідації файлу');
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
       return;
     }
 
@@ -147,7 +138,6 @@ export const DocumentAttachments = ({
       });
     } catch (error) {
       console.error('Upload failed:', error);
-
       toast.error('Не вдалося завантажити файл');
     } finally {
       setUploadState(null);
@@ -189,7 +179,7 @@ export const DocumentAttachments = ({
 
   if (isLoading) {
     return (
-      <div className="pt-6 border-t border-border/40 text-left flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 border-t border-border/40 pt-6 text-left text-xs text-muted-foreground">
         <FontAwesomeIcon
           icon={faSpinner}
           className="h-3.5 w-3.5 animate-spin text-primary"
@@ -201,14 +191,14 @@ export const DocumentAttachments = ({
 
   if (isError) {
     return (
-      <div className="pt-6 border-t border-border/40 text-left text-xs text-destructive font-medium">
+      <div className="border-t border-border/40 pt-6 text-left text-xs font-medium text-destructive">
         Failed to load attachments for this document.
       </div>
     );
   }
 
   return (
-    <div className="pt-8 border-t border-border/40 text-left space-y-4 w-full animate-in fade-in duration-300">
+    <div className="w-full space-y-4 border-t border-border/40 pt-8 text-left animate-in fade-in duration-300">
       <input
         type="file"
         ref={fileInputRef}
@@ -228,7 +218,7 @@ export const DocumentAttachments = ({
           <span>Attachments</span>
 
           {files && files.length > 0 && (
-            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground font-semibold">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
               {files.length}
             </span>
           )}
@@ -238,7 +228,7 @@ export const DocumentAttachments = ({
           type="button"
           disabled={!!uploadState}
           onClick={handleTriggerFileInput}
-          className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <FontAwesomeIcon
             icon={faArrowUpFromBracket}
@@ -253,29 +243,30 @@ export const DocumentAttachments = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={handleTriggerFileInput}
-        className={`w-full min-h-[110px] rounded-xl border border-dashed flex flex-col items-center justify-center p-6 gap-2 transition-all duration-200 cursor-pointer select-none ${
+        className={`flex min-h-[110px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 transition-all duration-200 ${
           isDragging
-            ? 'border-primary bg-primary/5 scale-[0.995] shadow-inner'
+            ? 'scale-[0.995] border-primary bg-primary/5 shadow-inner'
             : 'border-border/60 bg-background/20 hover:border-primary/30 hover:bg-accent/10'
         }`}
       >
         <div
-          className={`h-8 w-8 rounded-lg flex items-center justify-center transition-transform duration-200 ${
-            isDragging ? 'text-primary scale-110' : 'text-muted-foreground/50'
+          className={`flex h-8 w-8 items-center justify-center rounded-lg transition-transform duration-200 ${
+            isDragging ? 'scale-110 text-primary' : 'text-muted-foreground/50'
           }`}
         >
           <FontAwesomeIcon icon={faArrowUpFromBracket} className="h-4 w-4" />
         </div>
 
-        <div className="text-center space-y-0.5">
+        <div className="space-y-1 text-center">
           <p className="text-xs font-bold text-foreground/80">
             {isDragging
               ? 'Drop file here to upload'
               : 'Drag and drop file here, or click to browse'}
           </p>
 
-          <p className="text-[10px] text-muted-foreground font-medium">
-            PDF and images up to 5 MB
+          <p className="text-[10px] font-medium text-muted-foreground">
+            Дозволено завантажувати лише PDF-файли та зображення. Максимальний
+            розмір — 5 MB.
           </p>
         </div>
       </div>
@@ -290,36 +281,44 @@ export const DocumentAttachments = ({
       )}
 
       {(!files || files.length === 0) && !uploadState && (
-        <p className="text-xs italic text-muted-foreground/60 pl-1">
+        <p className="pl-1 text-xs italic text-muted-foreground/60">
           No files attached to this document yet.
         </p>
       )}
 
       {files && files.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           {files.map((file) => (
             <div
               key={file.id}
-              onClick={() => handleFileClick(file.url, file.fileName)}
-              className="group relative flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 hover:bg-accent/40 hover:border-primary/20 transition-all duration-200 cursor-pointer select-none"
+              onClick={() => handleFileClick(file)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleFileClick(file);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              className="group relative flex cursor-pointer select-none items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 transition-all duration-200 hover:border-primary/20 hover:bg-accent/40"
             >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="h-9 w-9 rounded-lg bg-secondary/60 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 transition-colors shrink-0 border border-border/10">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/10 bg-secondary/60 text-muted-foreground transition-colors group-hover:bg-primary/5 group-hover:text-primary">
                   <FontAwesomeIcon
                     icon={getFileIcon(file.fileName)}
                     className="h-4 w-4"
                   />
                 </div>
 
-                <div className="flex flex-col min-w-0 space-y-0.5">
+                <div className="flex min-w-0 flex-col space-y-0.5">
                   <span
-                    className="text-xs font-semibold text-foreground/90 truncate group-hover:text-primary transition-colors"
+                    className="truncate text-xs font-semibold text-foreground/90 transition-colors group-hover:text-primary"
                     title={file.fileName}
                   >
                     {file.fileName}
                   </span>
 
-                  <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1.5">
+                  <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
                     <span>{formatBytes(file.size)}</span>
                     <span className="text-muted-foreground/30">•</span>
                     <span>
@@ -334,47 +333,36 @@ export const DocumentAttachments = ({
 
               <button
                 type="button"
-                onClick={(e) => handleDeleteFile(e, file.id)}
-                className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200 cursor-pointer shrink-0 ml-2"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void handleDeleteFile(file.id);
+                }}
+                disabled={deletingFileId === file.id}
+                className="ml-2 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground/40 opacity-0 transition-all duration-200 hover:bg-destructive/10 hover:text-destructive focus:opacity-100 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
                 title="Видалити файл"
               >
-                <FontAwesomeIcon icon={faTrashCan} className="h-3 w-3" />
+                {deletingFileId === file.id ? (
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    className="h-3 w-3 animate-spin"
+                  />
+                ) : (
+                  <FontAwesomeIcon icon={faTrashCan} className="h-3 w-3" />
+                )}
               </button>
             </div>
           ))}
         </div>
       )}
 
-      {/* ua: модальне вікно перегляду зображення */}
-      {activePreviewImage && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-          onClick={() => setActivePreviewImage(null)}
-        >
-          {/* ua: кнопка закриття та назва файлу */}
-          <div className="absolute top-4 left-4 right-4 flex items-center justify-between text-white z-10">
-            <span className="text-sm font-semibold truncate max-w-[80%] opacity-80">
-              {activePreviewImage.name}
-            </span>
-
-            <button
-              type="button"
-              onClick={() => setActivePreviewImage(null)}
-              className="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition cursor-pointer"
-            >
-              <FontAwesomeIcon icon={faXmark} className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* ua: зображення */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={activePreviewImage.url}
-            alt={activePreviewImage.name}
-            className="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-200 select-none"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+      {selectedFile && (
+        <DocumentPreviewModal
+          file={selectedFile}
+          onClose={() => setSelectedFile(null)}
+          onDelete={handleDeleteFile}
+          isDeleting={deletingFileId === selectedFile.id}
+        />
       )}
     </div>
   );
