@@ -28,6 +28,7 @@ const DocItem = ({ doc }: DocItemProps) => {
 
   // ua: workspaceId витягується з url
   const workspaceId = typeof params?.id === 'string' ? params.id : 'global';
+
   // ua: визначення активного документа
   const activeDocId = typeof params?.docId === 'string' ? params.docId : '';
 
@@ -38,7 +39,7 @@ const DocItem = ({ doc }: DocItemProps) => {
     <div className="ml-4 border-l border-border/40 pl-2 space-y-1">
       <Link
         href={`/workspaces/${workspaceId}/documents/${doc.id}`}
-        className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-all duration-200 cursor-pointer text-left group ${
+        className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm cursor-pointer text-left group ${
           isActive
             ? 'bg-primary/10 text-primary font-semibold'
             : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
@@ -46,7 +47,7 @@ const DocItem = ({ doc }: DocItemProps) => {
       >
         <FontAwesomeIcon
           icon={faFileLines}
-          className={`h-3.5 w-3.5 transition-colors ${
+          className={`h-3.5 w-3.5 ${
             isActive
               ? 'text-primary'
               : 'text-muted-foreground/60 group-hover:text-primary/80'
@@ -75,30 +76,34 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
   const { onOpen } = useModal();
 
   return (
-    <div className="space-y-1 w-full group/folder">
-      <div className="flex w-full items-center justify-between rounded-md pr-2 hover:bg-accent/50 transition-all duration-200 group">
+    <div className="w-full space-y-1">
+      <div className="relative flex w-full items-center rounded-md">
         {/* ua: кнопка папки */}
         <button
+          type="button"
           onClick={onToggle}
-          className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer text-left group"
+          className="group/folder-button flex min-w-0 w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 pr-20 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <FontAwesomeIcon
             icon={isExpanded ? faFolderOpen : faFolder}
-            className={`h-3.5 w-3.5 transition-colors ${isExpanded ? 'text-primary' : 'text-primary/70'}`}
+            className={`h-3.5 w-3.5 shrink-0 ${
+              isExpanded ? 'text-primary' : 'text-primary/70'
+            }`}
           />
+
           <span className="truncate font-medium">{category.name}</span>
 
           {/* ua: стрілка що плавно обертається при змінах стану */}
           <FontAwesomeIcon
             icon={faChevronDown}
-            className={`ml-auto h-2.5 w-2.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-transform duration-200 ${
+            className={`ml-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/40 transition-transform duration-200 ${
               isExpanded ? 'rotate-180 text-foreground' : ''
             }`}
           />
         </button>
 
         {/* блок дій папки при ховері */}
-        <div className="opacity-0 group-hover/folder:opacity-100 flex items-center gap-0.5 transition-all duration-150">
+        <div className="pointer-events-none absolute right-2 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5 opacity-0 transition-opacity duration-100 group-hover/folder:opacity-100 group-hover/folder:pointer-events-auto group-focus-within/folder:opacity-100 group-focus-within/folder:pointer-events-auto">
           {/* кнопка + для створення документа всередині папки */}
           <button
             type="button"
@@ -109,7 +114,7 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
                 categoryName: category.name,
               });
             }}
-            className="h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground/60 hover:bg-background/80 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             title="Create document in this folder"
           >
             <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
@@ -125,7 +130,7 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
                 categoryName: category.name,
               });
             }}
-            className="h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground/60 hover:bg-background/80 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             title="Rename folder"
           >
             <FontAwesomeIcon icon={faPen} className="h-3 w-3" />
@@ -141,7 +146,7 @@ const FolderItem = ({ category, isExpanded, onToggle }: FolderItemProps) => {
                 categoryName: category.name,
               });
             }}
-            className="opacity-0 group-hover/folder:opacity-100 h-6 w-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-background/80 flex items-center justify-center transition-all cursor-pointer focus:opacity-100 focus:outline-none"
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground/60 hover:bg-background/80 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             title="Delete folder"
           >
             <FontAwesomeIcon icon={faEllipsisVertical} className="h-3 w-3" />
@@ -175,8 +180,10 @@ interface NavTreeProps {
 
 export const NavTree = ({ categories }: NavTreeProps) => {
   const params = useParams();
+
   // ua: динамічний айдішник воркспейсу аби прив'язати ключ localStorage до конкретного воркспейсу
   const workspaceId = typeof params?.id === 'string' ? params.id : 'global';
+
   // ua: визначення активного документа для логіки автоматичного розгортання папки
   const activeDocId = typeof params?.docId === 'string' ? params.docId : '';
 
@@ -189,6 +196,7 @@ export const NavTree = ({ categories }: NavTreeProps) => {
     // ua: зчитування раніше збережених папок з локалстору
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(storageKey);
+
       if (saved) {
         try {
           initialIds = JSON.parse(saved);
@@ -226,12 +234,13 @@ export const NavTree = ({ categories }: NavTreeProps) => {
 
       // ua: записуємо оновлений масив у локалстор
       localStorage.setItem(storageKey, JSON.stringify(nextIds));
+
       return nextIds;
     });
   };
 
   return (
-    <div className="space-y-1 w-full px-1">
+    <div className="w-full space-y-1 px-1">
       {categories.map((category) => (
         <FolderItem
           key={category.id}

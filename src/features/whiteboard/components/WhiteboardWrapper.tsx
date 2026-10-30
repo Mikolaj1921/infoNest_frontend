@@ -88,7 +88,6 @@ export default function WhiteboardWrapper({
             ? 'Changes are saved automatically after 2 seconds.'
             : 'You have read-only access to this whiteboard.'}
         </p>
-        <p>Board ID: {whiteboard.id}</p>
       </footer>
     </section>
   );

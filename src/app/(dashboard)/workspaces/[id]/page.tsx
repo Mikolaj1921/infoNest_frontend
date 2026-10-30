@@ -3,7 +3,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -40,6 +40,7 @@ import { useModal } from '@/hooks/use-modal-store';
 import { BoardTask, TaskCategory } from '@/types/kanban';
 
 type TaskGroups = Record<string, BoardTask[]>;
+type WorkspaceTab = 'documents' | 'kanban' | 'whiteboard';
 
 function cloneGroups(groups: TaskGroups): TaskGroups {
   return Object.fromEntries(
@@ -57,6 +58,9 @@ export default function WorkspacePage() {
   const params = useParams();
   const workspaceId = typeof params.id === 'string' ? params.id : '';
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const { onOpen } = useModal();
   const queryClient = useQueryClient();
   const queryKey = ['workspace-kanban', workspaceId];
@@ -71,9 +75,28 @@ export default function WorkspacePage() {
   const createColumnMutation = useCreateColumn(workspaceId);
   const reorderTasksMutation = useReorderTasks(workspaceId);
 
-  const [activeTab, setActiveTab] = useState<
-    'documents' | 'kanban' | 'whiteboard'
-  >('documents');
+  // ua: активна вкладка синхронізована з URL, щоб Sidebar міг відкривати потрібний розділ
+  const tabParam = searchParams.get('tab');
+
+  const activeTab: WorkspaceTab =
+    tabParam === 'kanban' || tabParam === 'whiteboard' ? tabParam : 'documents';
+
+  // ua: зміна вкладки оновлює URL без повного перезавантаження сторінки
+  const handleTabChange = (tab: WorkspaceTab) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    if (tab === 'documents') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', tab);
+    }
+
+    const query = nextParams.toString();
+
+    router.replace(`/workspaces/${workspaceId}${query ? `?${query}` : ''}`, {
+      scroll: false,
+    });
+  };
 
   const [dragGroups, setDragGroups] = useState<TaskGroups | null>(null);
 
@@ -227,7 +250,7 @@ export default function WorkspacePage() {
         <div className="flex items-center gap-1.5 bg-secondary/40 p-1 rounded-xl border border-border/10">
           <button
             type="button"
-            onClick={() => setActiveTab('documents')}
+            onClick={() => handleTabChange('documents')}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               activeTab === 'documents'
                 ? 'bg-background text-foreground shadow-sm'
@@ -240,7 +263,7 @@ export default function WorkspacePage() {
 
           <button
             type="button"
-            onClick={() => setActiveTab('kanban')}
+            onClick={() => handleTabChange('kanban')}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               activeTab === 'kanban'
                 ? 'bg-background text-primary shadow-sm'
@@ -254,7 +277,7 @@ export default function WorkspacePage() {
           {/* whiteboard - перехід до графічного полотна */}
           <button
             type="button"
-            onClick={() => setActiveTab('whiteboard')}
+            onClick={() => handleTabChange('whiteboard')}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               activeTab === 'whiteboard'
                 ? 'bg-background text-primary shadow-sm'
@@ -449,15 +472,21 @@ export default function WorkspacePage() {
       {activeTab === 'kanban' && (
         <div className="flex-1 flex flex-col min-h-0 space-y-4 text-left">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-foreground/90">
-              Sprint Task Board
-            </h3>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">
+                Task board
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Organize tasks into columns, track progress, and manage your
+                workflow.
+              </p>
+            </div>
 
             <button
               type="button"
               onClick={handleAddColumn}
               disabled={isLoading || createColumnMutation.isPending}
-              className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition cursor-pointer shadow-sm disabled:opacity-50"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition cursor-pointer"
             >
               <FontAwesomeIcon className="text-[10px]" icon={faPlus} />
               <span>Add Column</span>
