@@ -336,7 +336,7 @@ export const DocumentAttachments = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  void handleDeleteFile(file.id);
+                  setSelectedFile(file);
                 }}
                 disabled={deletingFileId === file.id}
                 className="ml-2 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground/40 opacity-0 transition-all duration-200 hover:bg-destructive/10 hover:text-destructive focus:opacity-100 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"

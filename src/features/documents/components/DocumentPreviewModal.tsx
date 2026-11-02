@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { FileAttachment } from '@/types/document';
 import { formatBytes } from '@/utils/file-format';
@@ -12,8 +12,6 @@ import {
   faSpinner,
   faTrashCan,
   faXmark,
-  faChevronLeft,
-  faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'sonner';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -63,6 +61,19 @@ export const DocumentPreviewModal = ({
 
   const fileType = getFileType(file.fileName);
 
+  // ua: стабільний callback — не створюємо новий обробник при кожному рендері
+  const handlePdfLoadSuccess = useCallback(
+    ({ numPages }: { numPages: number }) => {
+      setPdfPages(numPages);
+    },
+    [],
+  );
+
+  const handlePdfLoadError = useCallback((error: Error) => {
+    console.error('PDF loading error:', error);
+    setPdfError(true);
+  }, []);
+
   // ua: завантаження файлу через Blob
   const handleDownload = async () => {
     if (isDownloading) return;
@@ -73,7 +84,7 @@ export const DocumentPreviewModal = ({
       const response = await fetch(file.url);
 
       if (!response.ok) {
-        throw new Error('Download failed');
+        throw new Error(`Download failed: ${response.status}`);
       }
 
       const blob = await response.blob();
@@ -87,7 +98,8 @@ export const DocumentPreviewModal = ({
       link.click();
       link.remove();
 
-      URL.revokeObjectURL(blobUrl);
+      // ua: не відкликаємо URL миттєво, щоб браузер встиг почати завантаження
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (error) {
       console.error('File download failed:', error);
       toast.error('Не вдалося завантажити файл. Перевірте доступ до сховища.');
@@ -109,7 +121,7 @@ export const DocumentPreviewModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm animate-in fade-in duration-200 sm:p-6"
       onClick={onClose}
     >
       <div
@@ -182,25 +194,17 @@ export const DocumentPreviewModal = ({
         {/* ua: область перегляду */}
         <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#090a0d]">
           {fileType === 'pdf' && !pdfError && (
-            <div className="flex h-full w-full flex-col items-center overflow-auto">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-6">
               <Document
                 file={file.url}
-                onLoadSuccess={({ numPages }) => {
-                  setPdfPages(numPages);
-                  setCurrentPage(1);
-                }}
-                onLoadError={(error) => {
-                  console.error('PDF loading error:', error);
-                  setPdfError(true);
-                }}
+                suspense={false}
+                onLoadSuccess={handlePdfLoadSuccess}
+                onLoadError={handlePdfLoadError}
                 loading={
-                  <div className="flex h-full items-center justify-center gap-3 text-sm text-white/50">
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      className="animate-spin"
-                    />
-                    Завантаження PDF...
-                  </div>
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    className="h-8 w-8 animate-spin text-primary"
+                  />
                 }
                 error={
                   <div className="p-6 text-center text-sm text-red-400">
@@ -219,38 +223,36 @@ export const DocumentPreviewModal = ({
                       : 900,
                     1000,
                   )}
+                  loading={
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      className="h-8 w-8 animate-spin text-primary"
+                    />
+                  }
                 />
               </Document>
 
-              {pdfPages > 1 && (
-                <div className="sticky bottom-4 flex items-center gap-4 rounded-xl border border-white/10 bg-[#171a21] px-4 py-2 text-xs text-white shadow-xl">
-                  <button
-                    type="button"
-                    disabled={currentPage <= 1}
-                    onClick={() =>
-                      setCurrentPage((page) => Math.max(1, page - 1))
-                    }
-                    className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-white/10 disabled:opacity-30"
-                  >
-                    <FontAwesomeIcon icon={faChevronLeft} />
-                  </button>
+              <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-[#171a21] px-4 py-2 text-xs text-white">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((page) => page - 1)}
+                >
+                  Previous
+                </button>
 
-                  <span>
-                    Сторінка {currentPage} / {pdfPages}
-                  </span>
+                <span>
+                  Сторінка {currentPage} / {pdfPages}
+                </span>
 
-                  <button
-                    type="button"
-                    disabled={currentPage >= pdfPages}
-                    onClick={() =>
-                      setCurrentPage((page) => Math.min(pdfPages, page + 1))
-                    }
-                    className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-white/10 disabled:opacity-30"
-                  >
-                    <FontAwesomeIcon icon={faChevronRight} />
-                  </button>
-                </div>
-              )}
+                <button
+                  type="button"
+                  disabled={currentPage >= pdfPages}
+                  onClick={() => setCurrentPage((page) => page + 1)}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
 
