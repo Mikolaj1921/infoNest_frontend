@@ -4,6 +4,7 @@ import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import Highlight from '@tiptap/extension-highlight';
 import { TextStyle, Color } from '@tiptap/extension-text-style';
+import { TableKit } from '@tiptap/extension-table';
 
 // ua: конфігурація всіх розширень редактора
 export const editorExtensions = [
@@ -27,19 +28,38 @@ export const editorExtensions = [
     },
   }),
 
-  // ua: вирівнювання заголовків та абзаців
   TextAlign.configure({
     types: ['heading', 'paragraph'],
     alignments: ['left', 'center', 'right', 'justify'],
     defaultAlignment: 'left',
   }),
 
-  // ua: підтримка стилів та кольорів тексту
   TextStyle,
   Color,
 
-  // ua: кольорове виділення тексту
   Highlight.configure({
     multicolor: true,
+  }),
+
+  // ua: таблиці та їх стилізація
+  TableKit.configure({
+    table: {
+      HTMLAttributes: {
+        class: 'w-full border-collapse table-fixed my-4',
+      },
+    },
+
+    tableHeader: {
+      HTMLAttributes: {
+        class:
+          'border border-border bg-muted/60 px-3 py-2 text-left font-semibold',
+      },
+    },
+
+    tableCell: {
+      HTMLAttributes: {
+        class: 'border border-border px-3 py-2 align-top',
+      },
+    },
   }),
 ];

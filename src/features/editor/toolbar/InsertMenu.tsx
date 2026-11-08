@@ -1,63 +1,197 @@
 'use client';
 
-// ua: інструменти вставлення блоків у документ
+// ua: меню для вставлення додаткових елементів у редактор
+import { useRef, type ChangeEvent, type ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faQuoteLeft,
   faCode,
   faMinus,
+  faImage,
+  faTable,
+  faArrowDown,
+  faArrowRight,
+  faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 
 import type { EditorToolbarSectionProps } from '@/types/editor';
 
+interface InsertMenuProps extends EditorToolbarSectionProps {
+  onInsertImage: (file: File) => Promise<void>;
+}
+
+// ua: універсальна кнопка меню вставлення
+interface InsertButtonProps {
+  title: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}
+
+const InsertButton = ({
+  title,
+  disabled = false,
+  onClick,
+  children,
+}: InsertButtonProps) => (
+  <button
+    type="button"
+    title={title}
+    aria-label={title}
+    disabled={disabled}
+    onMouseDown={(event) => event.preventDefault()}
+    onClick={onClick}
+    className="flex h-8 items-center justify-center gap-2 rounded-lg px-2.5 text-sm text-foreground/80 transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+  >
+    {children}
+  </button>
+);
+
 export const InsertMenu = ({
   editor,
   disabled = false,
-}: EditorToolbarSectionProps) => {
-  // ua: спільні стилі кнопок вставлення
-  const getButtonClass = (isActive = false) =>
-    `flex h-8 w-8 items-center justify-center rounded-lg border transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-      isActive
-        ? 'bg-primary/10 text-primary border-primary/20'
-        : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
-    }`;
+  onInsertImage,
+}: InsertMenuProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ua: відкриття системного вікна вибору зображення
+  const handleImageButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // ua: обробка вибраного зображення
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+
+    if (file) {
+      void onInsertImage(file);
+    }
+
+    // ua: дозволяє повторно вибрати той самий файл
+    event.currentTarget.value = '';
+  };
+
+  const isInsideTable = editor.isActive('table');
 
   return (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+    <div className="flex flex-wrap items-center gap-1">
+      {/* ua: приховане поле вибору зображення */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+        className="hidden"
+        onChange={handleImageChange}
+      />
+
+      {/* ua: блокові елементи */}
+      <InsertButton
+        title="Insert blockquote"
         disabled={disabled || !editor.can().toggleBlockquote()}
-        className={getButtonClass(editor.isActive('blockquote'))}
-        title="Blockquote"
-        aria-label="Insert blockquote"
-        aria-pressed={editor.isActive('blockquote')}
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
       >
-        <FontAwesomeIcon icon={faQuoteLeft} className="h-3.5 w-3.5" />
-      </button>
+        <FontAwesomeIcon icon={faQuoteLeft} />
+      </InsertButton>
 
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+      <InsertButton
+        title="Insert code block"
         disabled={disabled || !editor.can().toggleCodeBlock()}
-        className={getButtonClass(editor.isActive('codeBlock'))}
-        title="Code block"
-        aria-label="Insert code block"
-        aria-pressed={editor.isActive('codeBlock')}
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
       >
-        <FontAwesomeIcon icon={faCode} className="h-3.5 w-3.5" />
-      </button>
+        <FontAwesomeIcon icon={faCode} />
+      </InsertButton>
 
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+      <InsertButton
+        title="Insert horizontal rule"
         disabled={disabled || !editor.can().setHorizontalRule()}
-        className={getButtonClass()}
-        title="Horizontal divider"
-        aria-label="Insert horizontal divider"
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
       >
-        <FontAwesomeIcon icon={faMinus} className="h-3.5 w-3.5" />
-      </button>
+        <FontAwesomeIcon icon={faMinus} />
+      </InsertButton>
+
+      <div className="mx-1 h-6 w-px bg-border/60" />
+
+      {/* ua: вставлення зображень */}
+      <InsertButton
+        title="Insert image"
+        disabled={disabled}
+        onClick={handleImageButtonClick}
+      >
+        <FontAwesomeIcon icon={faImage} />
+        <span>Image</span>
+      </InsertButton>
+
+      {/* ua: вставлення таблиці 3x3 із заголовком */}
+      <InsertButton
+        title="Insert table"
+        disabled={disabled || !editor.can().insertTable()}
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertTable({
+              rows: 3,
+              cols: 3,
+              withHeaderRow: true,
+            })
+            .run()
+        }
+      >
+        <FontAwesomeIcon icon={faTable} />
+        <span>Table</span>
+      </InsertButton>
+
+      {/* ua: операції з уже створеною таблицею */}
+      {isInsideTable && (
+        <>
+          <div className="mx-1 h-6 w-px bg-border/60" />
+
+          <InsertButton
+            title="Add row below"
+            disabled={disabled || !editor.can().addRowAfter()}
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+          >
+            <FontAwesomeIcon icon={faArrowDown} />
+            <span>Row</span>
+          </InsertButton>
+
+          <InsertButton
+            title="Add column after"
+            disabled={disabled || !editor.can().addColumnAfter()}
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+          >
+            <FontAwesomeIcon icon={faArrowRight} />
+            <span>Column</span>
+          </InsertButton>
+
+          <InsertButton
+            title="Delete current row"
+            disabled={disabled || !editor.can().deleteRow()}
+            onClick={() => editor.chain().focus().deleteRow().run()}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+            <span>Row</span>
+          </InsertButton>
+
+          <InsertButton
+            title="Delete current column"
+            disabled={disabled || !editor.can().deleteColumn()}
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+            <span>Column</span>
+          </InsertButton>
+
+          <InsertButton
+            title="Delete table"
+            disabled={disabled || !editor.can().deleteTable()}
+            onClick={() => editor.chain().focus().deleteTable().run()}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+            <span>Table</span>
+          </InsertButton>
+        </>
+      )}
     </div>
   );
 };

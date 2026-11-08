@@ -4,16 +4,17 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import { useEffect, useRef } from 'react';
 
+// ua: стилі редактора
+import styles from './Editor.module.css';
+
+// ua: типи редактора
+import type { EditorProps } from '../../../types/editor';
+
 // component
 import { Toolbar } from './Toolbar';
+import { EditorBubbleMenu } from './EditorBubbleMenu';
 import { useEditorUpload } from '../hooks/useEditorUpload';
 import { editorExtensions } from '../extensions/editorExtensions';
-
-interface EditorProps {
-  initialContent: string;
-  onContentChange: (htmlContent: string, isDirty: boolean) => void;
-  editable?: boolean;
-}
 
 // component
 export const Editor = ({
@@ -42,7 +43,7 @@ export const Editor = ({
   });
 
   // ua: підключення функціоналу завантаження зображень
-  useEditorUpload(editor);
+  const { uploadAndInsertImage } = useEditorUpload(editor);
 
   useEffect(() => {
     if (!editor) return;
@@ -83,20 +84,22 @@ export const Editor = ({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 space-y-4 text-left">
-      {editable && <Toolbar editor={editor} />}
+    <div className="mx-auto w-full max-w-4xl space-y-4 p-4 text-left">
+      {editable && (
+        <Toolbar editor={editor} onInsertImage={uploadAndInsertImage} />
+      )}
+
+      {editable && <EditorBubbleMenu editor={editor} />}
 
       {!editable && (
-        <div className="text-xs text-amber-500 font-medium">
+        <div className="text-xs font-medium text-amber-500">
           Перегляд лише для читання
         </div>
       )}
 
-      <div className="min-h-[400px] w-full rounded-2xl border border-border bg-card/20 p-6 backdrop-blur-md shadow-inner focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-300">
-        <EditorContent
-          editor={editor}
-          className="prose prose-invert max-w-none focus:outline-none "
-        />
+      {/* ua: полотно документа */}
+      <div className="min-h-[400px] w-full rounded-2xl border border-border bg-card/20 p-4 shadow-inner backdrop-blur-md transition-all duration-300 focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 sm:p-6 lg:p-8">
+        <EditorContent editor={editor} className={styles.content} />
       </div>
     </div>
   );

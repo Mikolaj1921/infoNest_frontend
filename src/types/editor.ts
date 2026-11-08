@@ -12,6 +12,7 @@ export interface EditorProps {
 // ua: пропси панелі інструментів
 export interface ToolbarProps {
   editor: Editor;
+  onInsertImage: (file: File) => Promise<void>;
 }
 
 // ua: пропси компонентів форматування

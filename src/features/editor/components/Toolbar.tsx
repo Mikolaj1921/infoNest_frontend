@@ -8,7 +8,7 @@ import { TextAlignment } from '../toolbar/TextAlignment';
 import { InsertMenu } from '../toolbar/InsertMenu';
 import { HistoryControls } from '../toolbar/HistoryControls';
 
-export const Toolbar = ({ editor }: ToolbarProps) => {
+export const Toolbar = ({ editor, onInsertImage }: ToolbarProps) => {
   const disabled = !editor.isEditable;
 
   return (
@@ -18,7 +18,7 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
 
       <div className="h-6 w-px bg-border/60" />
 
-      {/* ua: форматування тексту */}
+      {/* ua: інструменти форматування */}
       <TextFormatting editor={editor} disabled={disabled} />
 
       <div className="h-6 w-px bg-border/60" />
@@ -28,8 +28,12 @@ export const Toolbar = ({ editor }: ToolbarProps) => {
 
       <div className="h-6 w-px bg-border/60" />
 
-      {/* ua: вставлення блоків */}
-      <InsertMenu editor={editor} disabled={disabled} />
+      {/* ua: вставлення блоків, зображень і таблиць */}
+      <InsertMenu
+        editor={editor}
+        disabled={disabled}
+        onInsertImage={onInsertImage}
+      />
     </div>
   );
 };
