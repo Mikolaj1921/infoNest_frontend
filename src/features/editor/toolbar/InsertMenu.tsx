@@ -1,7 +1,7 @@
 'use client';
 
 // ua: меню для вставлення додаткових елементів у редактор
-import { useRef, type ChangeEvent, type ReactNode } from 'react';
+import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faQuoteLeft,
@@ -47,12 +47,18 @@ const InsertButton = ({
   </button>
 );
 
+const TABLE_GRID_SIZE = 6;
+
 export const InsertMenu = ({
   editor,
   disabled = false,
   onInsertImage,
 }: InsertMenuProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isTablePickerOpen, setIsTablePickerOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState(1);
+  const [selectedCols, setSelectedCols] = useState(1);
 
   // ua: відкриття системного вікна вибору зображення
   const handleImageButtonClick = () => {
@@ -69,6 +75,25 @@ export const InsertMenu = ({
 
     // ua: дозволяє повторно вибрати той самий файл
     event.currentTarget.value = '';
+  };
+
+  // ua: створення таблиці вибраного розміру
+  const handleInsertTable = () => {
+    if (!editor.can().insertTable()) return;
+
+    editor
+      .chain()
+      .focus()
+      .insertTable({
+        rows: selectedRows,
+        cols: selectedCols,
+        withHeaderRow: true,
+      })
+      .run();
+
+    setIsTablePickerOpen(false);
+    setSelectedRows(1);
+    setSelectedCols(1);
   };
 
   const isInsideTable = editor.isActive('table');
@@ -121,25 +146,72 @@ export const InsertMenu = ({
         <span>Image</span>
       </InsertButton>
 
-      {/* ua: вставлення таблиці 3x3 із заголовком */}
-      <InsertButton
-        title="Insert table"
-        disabled={disabled || !editor.can().insertTable()}
-        onClick={() =>
-          editor
-            .chain()
-            .focus()
-            .insertTable({
-              rows: 3,
-              cols: 3,
-              withHeaderRow: true,
-            })
-            .run()
-        }
-      >
-        <FontAwesomeIcon icon={faTable} />
-        <span>Table</span>
-      </InsertButton>
+      {/* ua: вибір розміру таблиці */}
+      <div className="relative">
+        <InsertButton
+          title="Insert table"
+          disabled={disabled || !editor.can().insertTable()}
+          onClick={() => setIsTablePickerOpen((current) => !current)}
+        >
+          <FontAwesomeIcon icon={faTable} />
+          <span>Table</span>
+        </InsertButton>
+
+        {isTablePickerOpen && (
+          <div className="absolute left-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-card p-3 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-semibold text-foreground">
+                Insert table
+              </span>
+
+              <span className="text-xs font-medium text-primary">
+                {selectedRows} × {selectedCols}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-6 gap-1">
+              {Array.from(
+                { length: TABLE_GRID_SIZE },
+                (_, rowIndex) => rowIndex + 1,
+              ).map((row) =>
+                Array.from(
+                  { length: TABLE_GRID_SIZE },
+                  (_, colIndex) => colIndex + 1,
+                ).map((col) => {
+                  const isSelected = row <= selectedRows && col <= selectedCols;
+
+                  return (
+                    <button
+                      key={`${row}-${col}`}
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onMouseEnter={() => {
+                        setSelectedRows(row);
+                        setSelectedCols(col);
+                      }}
+                      onFocus={() => {
+                        setSelectedRows(row);
+                        setSelectedCols(col);
+                      }}
+                      onClick={handleInsertTable}
+                      aria-label={`${row} rows by ${col} columns`}
+                      className={`h-6 w-6 rounded-sm border transition-colors ${
+                        isSelected
+                          ? 'border-primary bg-primary/30'
+                          : 'border-border bg-background hover:border-primary/60'
+                      }`}
+                    />
+                  );
+                }),
+              )}
+            </div>
+
+            <p className="mt-3 text-center text-[11px] text-muted-foreground">
+              Select table size
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* ua: операції з уже створеною таблицею */}
       {isInsideTable && (

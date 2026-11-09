@@ -1,6 +1,7 @@
 'use client';
 
 // ua: керування історією змін редактора
+import { useEditorState } from '@tiptap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRotateLeft, faRotateRight } from '@fortawesome/free-solid-svg-icons';
 
@@ -10,8 +11,14 @@ export const HistoryControls = ({
   editor,
   disabled = false,
 }: EditorToolbarSectionProps) => {
-  const canUndo = editor.can().undo();
-  const canRedo = editor.can().redo();
+  // ua: відстежуємо доступність скасування та повторення дій
+  const { canUndo, canRedo } = useEditorState({
+    editor,
+    selector: ({ editor: currentEditor }) => ({
+      canUndo: currentEditor.can().undo(),
+      canRedo: currentEditor.can().redo(),
+    }),
+  });
 
   const buttonClass =
     'flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30';

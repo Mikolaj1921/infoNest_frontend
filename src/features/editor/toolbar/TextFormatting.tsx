@@ -1,6 +1,7 @@
 'use client';
 
 // ua: інструменти форматування тексту
+import { useEditorState } from '@tiptap/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBold,
@@ -40,10 +41,25 @@ export const TextFormatting = ({
   editor,
   disabled = false,
 }: EditorToolbarSectionProps) => {
+  // ua: відстежуємо активний стан форматування редактора
+  const activeStates = useEditorState({
+    editor,
+    selector: ({ editor: currentEditor }) => ({
+      bold: currentEditor.isActive('bold'),
+      italic: currentEditor.isActive('italic'),
+      underline: currentEditor.isActive('underline'),
+      strike: currentEditor.isActive('strike'),
+      textColor: Boolean(currentEditor.getAttributes('textStyle').color),
+      highlight: currentEditor.isActive('highlight'),
+      bulletList: currentEditor.isActive('bulletList'),
+      orderedList: currentEditor.isActive('orderedList'),
+    }),
+  });
+
   const getButtonClass = (isActive: boolean) =>
     `flex h-8 w-8 items-center justify-center rounded-lg border transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
       isActive
-        ? 'bg-primary/10 text-primary border-primary/20'
+        ? 'bg-primary/20 text-primary border-primary/40 shadow-sm'
         : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
     }`;
 
@@ -53,10 +69,10 @@ export const TextFormatting = ({
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
         disabled={disabled || !editor.can().toggleBold()}
-        className={getButtonClass(editor.isActive('bold'))}
+        className={getButtonClass(activeStates.bold)}
         title="Bold (Ctrl+B)"
         aria-label="Bold"
-        aria-pressed={editor.isActive('bold')}
+        aria-pressed={activeStates.bold}
       >
         <FontAwesomeIcon icon={faBold} className="h-3.5 w-3.5" />
       </button>
@@ -65,10 +81,10 @@ export const TextFormatting = ({
         type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         disabled={disabled || !editor.can().toggleItalic()}
-        className={getButtonClass(editor.isActive('italic'))}
+        className={getButtonClass(activeStates.italic)}
         title="Italic (Ctrl+I)"
         aria-label="Italic"
-        aria-pressed={editor.isActive('italic')}
+        aria-pressed={activeStates.italic}
       >
         <FontAwesomeIcon icon={faItalic} className="h-3.5 w-3.5" />
       </button>
@@ -77,10 +93,10 @@ export const TextFormatting = ({
         type="button"
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         disabled={disabled || !editor.can().toggleUnderline()}
-        className={getButtonClass(editor.isActive('underline'))}
+        className={getButtonClass(activeStates.underline)}
         title="Underline (Ctrl+U)"
         aria-label="Underline"
-        aria-pressed={editor.isActive('underline')}
+        aria-pressed={activeStates.underline}
       >
         <FontAwesomeIcon icon={faUnderline} className="h-3.5 w-3.5" />
       </button>
@@ -89,10 +105,10 @@ export const TextFormatting = ({
         type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
         disabled={disabled || !editor.can().toggleStrike()}
-        className={getButtonClass(editor.isActive('strike'))}
+        className={getButtonClass(activeStates.strike)}
         title="Strikethrough"
         aria-label="Strikethrough"
-        aria-pressed={editor.isActive('strike')}
+        aria-pressed={activeStates.strike}
       >
         <FontAwesomeIcon icon={faStrikethrough} className="h-3.5 w-3.5" />
       </button>
@@ -104,9 +120,10 @@ export const TextFormatting = ({
         <button
           type="button"
           disabled={disabled}
-          className={getButtonClass(editor.isActive('textStyle'))}
+          className={getButtonClass(activeStates.textColor)}
           title="Text color"
           aria-label="Text color"
+          aria-pressed={activeStates.textColor}
         >
           <FontAwesomeIcon icon={faPalette} className="h-3.5 w-3.5" />
         </button>
@@ -122,6 +139,7 @@ export const TextFormatting = ({
                 key={color}
                 type="button"
                 disabled={disabled}
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() => editor.chain().focus().setColor(color).run()}
                 className="h-6 w-6 rounded-full border border-border/70 transition-transform hover:scale-110 disabled:opacity-40"
                 style={{ backgroundColor: color }}
@@ -134,6 +152,7 @@ export const TextFormatting = ({
           <button
             type="button"
             disabled={disabled}
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => editor.chain().focus().unsetColor().run()}
             className="mt-3 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
@@ -148,10 +167,10 @@ export const TextFormatting = ({
         <button
           type="button"
           disabled={disabled}
-          className={getButtonClass(editor.isActive('highlight'))}
+          className={getButtonClass(activeStates.highlight)}
           title="Highlight text"
           aria-label="Highlight text"
-          aria-pressed={editor.isActive('highlight')}
+          aria-pressed={activeStates.highlight}
         >
           <FontAwesomeIcon icon={faHighlighter} className="h-3.5 w-3.5" />
         </button>
@@ -167,6 +186,7 @@ export const TextFormatting = ({
                 key={color}
                 type="button"
                 disabled={disabled}
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() =>
                   editor.chain().focus().setHighlight({ color }).run()
                 }
@@ -181,6 +201,7 @@ export const TextFormatting = ({
           <button
             type="button"
             disabled={disabled}
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => editor.chain().focus().unsetHighlight().run()}
             className="mt-3 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
@@ -196,10 +217,10 @@ export const TextFormatting = ({
         type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         disabled={disabled || !editor.can().toggleBulletList()}
-        className={getButtonClass(editor.isActive('bulletList'))}
+        className={getButtonClass(activeStates.bulletList)}
         title="Bullet list"
         aria-label="Bullet list"
-        aria-pressed={editor.isActive('bulletList')}
+        aria-pressed={activeStates.bulletList}
       >
         <FontAwesomeIcon icon={faListUl} className="h-3.5 w-3.5" />
       </button>
@@ -208,10 +229,10 @@ export const TextFormatting = ({
         type="button"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         disabled={disabled || !editor.can().toggleOrderedList()}
-        className={getButtonClass(editor.isActive('orderedList'))}
+        className={getButtonClass(activeStates.orderedList)}
         title="Numbered list"
         aria-label="Numbered list"
-        aria-pressed={editor.isActive('orderedList')}
+        aria-pressed={activeStates.orderedList}
       >
         <FontAwesomeIcon icon={faListOl} className="h-3.5 w-3.5" />
       </button>
