@@ -13,7 +13,7 @@ import {
 } from '@/types/editor';
 
 // ua: хук для завантаження та вставлення зображень у редактор
-export const useEditorUpload = (editor: Editor | null) => {
+export const useEditorUpload = (editor: Editor | null, documentId: string) => {
   // ua: перевірка допустимого формату та розміру зображення
   const validateImage = useCallback((file: File): boolean => {
     if (
@@ -36,14 +36,14 @@ export const useEditorUpload = (editor: Editor | null) => {
   // ua: завантаження зображення та вставлення його в редактор
   const uploadAndInsertImage = useCallback(
     async (file: File) => {
-      if (!editor || !editor.isEditable) return;
+      if (!editor || !editor.isEditable || !documentId) return;
       if (!validateImage(file)) return;
 
       const toastId = toast.loading(`Uploading image: ${file.name}...`);
 
       try {
         const uploadedFile = await fileService.uploadFile(
-          'inline-editor-image',
+          documentId,
           file,
           () => {},
         );
@@ -65,7 +65,7 @@ export const useEditorUpload = (editor: Editor | null) => {
         toast.error('Failed to upload image to text', { id: toastId });
       }
     },
-    [editor, validateImage],
+    [editor, documentId, validateImage],
   );
 
   // ua: обробка перетягування зображень у редактор

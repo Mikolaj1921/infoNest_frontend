@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/react';
 
 // ua: пропси основного компонента редактора
 export interface EditorProps {
+  documentId: string;
   initialContent: string;
   onContentChange: (htmlContent: string, isDirty: boolean) => void;
   editable?: boolean;

@@ -18,6 +18,7 @@ import { editorExtensions } from '../extensions/editorExtensions';
 
 // component
 export const Editor = ({
+  documentId,
   initialContent,
   onContentChange,
   editable = true,
@@ -43,7 +44,7 @@ export const Editor = ({
   });
 
   // ua: підключення функціоналу завантаження зображень
-  const { uploadAndInsertImage } = useEditorUpload(editor);
+  const { uploadAndInsertImage } = useEditorUpload(editor, documentId);
 
   useEffect(() => {
     if (!editor) return;

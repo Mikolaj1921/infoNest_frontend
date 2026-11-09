@@ -357,6 +357,7 @@ export default function DocumentPage() {
       <section className="min-h-[60vh] overflow-hidden rounded-xl border border-[#252833] bg-[#090b10]">
         <Editor
           key={docId}
+          documentId={docId}
           initialContent={document.content || DEFAULT_CONTENT}
           onContentChange={handleContentChange}
           editable
@@ -385,7 +386,7 @@ export default function DocumentPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="revision-history-title"
-            className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+            className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#252833] bg-[#090b10] p-6 text-white shadow-xl"
           >
             <div className="flex items-center justify-between gap-4">
               <h2 id="revision-history-title" className="text-xl font-semibold">
@@ -398,7 +399,7 @@ export default function DocumentPage() {
                   setIsHistoryOpen(false);
                   setSelectedRevision(null);
                 }}
-                className="rounded-md px-3 py-2 text-sm hover:bg-gray-100"
+                className="rounded-md px-3 py-2 text-sm hover:bg-accent/20"
               >
                 Close
               </button>
@@ -436,7 +437,7 @@ export default function DocumentPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedRevision(revision)}
-                        className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+                        className="rounded-md border px-3 py-2 text-sm hover:bg-accent/20"
                       >
                         Preview
                       </button>
@@ -486,7 +487,7 @@ export default function DocumentPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-document-title"
-            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            className="max-h-[80vh] w-full max-w-xl overflow-y-auto rounded-xl border border-[#252833] bg-[#090b10] p-6 text-white shadow-xl"
           >
             <h2 id="delete-document-title" className="text-lg font-semibold">
               Delete document?
@@ -501,7 +502,7 @@ export default function DocumentPage() {
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setIsDeleteOpen(false)}
-                className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+                className="rounded-md border px-4 py-2 text-sm disabled:opacity-50  hover:bg-accent/20"
               >
                 Cancel
               </button>
