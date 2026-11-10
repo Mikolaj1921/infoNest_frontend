@@ -21,8 +21,7 @@ export const HistoryControls = ({
   });
 
   const buttonClass =
-    'flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30';
-
+    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30';
   return (
     <div className="flex items-center gap-1">
       <button

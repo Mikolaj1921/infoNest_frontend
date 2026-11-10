@@ -57,7 +57,7 @@ export const TextFormatting = ({
   });
 
   const getButtonClass = (isActive: boolean) =>
-    `flex h-8 w-8 items-center justify-center rounded-lg border transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+    `flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
       isActive
         ? 'bg-primary/20 text-primary border-primary/40 shadow-sm'
         : 'border-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -128,37 +128,39 @@ export const TextFormatting = ({
           <FontAwesomeIcon icon={faPalette} className="h-3.5 w-3.5" />
         </button>
 
-        <div className="invisible absolute left-0 top-full z-50 mt-2 w-40 rounded-xl border border-border bg-card p-3 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-          <p className="mb-2 text-xs font-semibold text-muted-foreground">
-            Text color
-          </p>
+        <div className="invisible pointer-events-none absolute left-0 top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+          <div className="w-40 rounded-xl border border-border bg-card p-3 shadow-xl">
+            <p className="mb-2 text-xs font-semibold text-muted-foreground">
+              Text color
+            </p>
 
-          <div className="grid grid-cols-4 gap-2">
-            {textColors.map((color) => (
-              <button
-                key={color}
-                type="button"
-                disabled={disabled}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => editor.chain().focus().setColor(color).run()}
-                className="h-6 w-6 rounded-full border border-border/70 transition-transform hover:scale-110 disabled:opacity-40"
-                style={{ backgroundColor: color }}
-                title={color}
-                aria-label={`Set text color ${color}`}
-              />
-            ))}
+            <div className="grid grid-cols-4 gap-2">
+              {textColors.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  disabled={disabled}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => editor.chain().focus().setColor(color).run()}
+                  className="h-6 w-6 rounded-full border border-border/70 transition-colors duration-150 disabled:opacity-40"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                  aria-label={`Set text color ${color}`}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              disabled={disabled}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => editor.chain().focus().unsetColor().run()}
+              className="mt-3 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <FontAwesomeIcon icon={faEraser} />
+              Remove color
+            </button>
           </div>
-
-          <button
-            type="button"
-            disabled={disabled}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => editor.chain().focus().unsetColor().run()}
-            className="mt-3 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <FontAwesomeIcon icon={faEraser} />
-            Remove color
-          </button>
         </div>
       </div>
 
@@ -175,39 +177,41 @@ export const TextFormatting = ({
           <FontAwesomeIcon icon={faHighlighter} className="h-3.5 w-3.5" />
         </button>
 
-        <div className="invisible absolute left-0 top-full z-50 mt-2 w-40 rounded-xl border border-border bg-card p-3 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-          <p className="mb-2 text-xs font-semibold text-muted-foreground">
-            Highlight color
-          </p>
+        <div className="invisible pointer-events-none absolute left-0 top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+          <div className="w-40 rounded-xl border border-border bg-card p-3 shadow-xl">
+            <p className="mb-2 text-xs font-semibold text-muted-foreground">
+              Highlight color
+            </p>
 
-          <div className="grid grid-cols-3 gap-2">
-            {highlightColors.map((color) => (
-              <button
-                key={color}
-                type="button"
-                disabled={disabled}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() =>
-                  editor.chain().focus().setHighlight({ color }).run()
-                }
-                className="h-7 rounded-lg border border-border/70 transition-transform hover:scale-105 disabled:opacity-40"
-                style={{ backgroundColor: color }}
-                title={color}
-                aria-label={`Highlight with ${color}`}
-              />
-            ))}
+            <div className="grid grid-cols-3 gap-2">
+              {highlightColors.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  disabled={disabled}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() =>
+                    editor.chain().focus().setHighlight({ color }).run()
+                  }
+                  className="h-7 rounded-lg border border-border/70 transition-colors duration-150 disabled:opacity-40"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                  aria-label={`Highlight with ${color}`}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              disabled={disabled}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => editor.chain().focus().unsetHighlight().run()}
+              className="mt-3 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <FontAwesomeIcon icon={faEraser} />
+              Remove highlight
+            </button>
           </div>
-
-          <button
-            type="button"
-            disabled={disabled}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => editor.chain().focus().unsetHighlight().run()}
-            className="mt-3 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <FontAwesomeIcon icon={faEraser} />
-            Remove highlight
-          </button>
         </div>
       </div>
 

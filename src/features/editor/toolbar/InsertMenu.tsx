@@ -41,7 +41,7 @@ const InsertButton = ({
     disabled={disabled}
     onMouseDown={(event) => event.preventDefault()}
     onClick={onClick}
-    className="flex h-8 items-center justify-center gap-2 rounded-lg px-2.5 text-sm text-foreground/80 transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+    className="flex h-8 items-center justify-center gap-2 rounded-lg px-2.5 text-sm text-foreground/80 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
   >
     {children}
   </button>
@@ -195,7 +195,7 @@ export const InsertMenu = ({
                       }}
                       onClick={handleInsertTable}
                       aria-label={`${row} rows by ${col} columns`}
-                      className={`h-6 w-6 rounded-sm border transition-colors ${
+                      className={`h-6 w-6 rounded-sm border ${
                         isSelected
                           ? 'border-primary bg-primary/30'
                           : 'border-border bg-background hover:border-primary/60'

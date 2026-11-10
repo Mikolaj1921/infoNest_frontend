@@ -6,13 +6,18 @@ import Highlight from '@tiptap/extension-highlight';
 import { TextStyle, Color } from '@tiptap/extension-text-style';
 import { TableKit } from '@tiptap/extension-table';
 
+import { ParagraphStyle } from './ParagraphStyle';
+
 // ua: конфігурація всіх розширень редактора
 export const editorExtensions = [
   StarterKit.configure({
     heading: {
-      levels: [1, 2, 3],
+      levels: [1, 2, 3, 4, 5, 6],
     },
   }),
+
+  // ua: додаткові стилі звичайних абзаців
+  ParagraphStyle,
 
   Placeholder.configure({
     placeholder: 'Please start typing your text here...',
