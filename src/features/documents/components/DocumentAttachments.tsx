@@ -13,7 +13,6 @@ import {
   faPaperclip,
   faFilePdf,
   faFileImage,
-  faTrashCan,
   faSpinner,
   faArrowUpFromBracket,
 } from '@fortawesome/free-solid-svg-icons';
@@ -228,7 +227,7 @@ export const DocumentAttachments = ({
           type="button"
           disabled={!!uploadState}
           onClick={handleTriggerFileInput}
-          className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground shadow-sm hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <FontAwesomeIcon
             icon={faArrowUpFromBracket}
@@ -243,14 +242,14 @@ export const DocumentAttachments = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={handleTriggerFileInput}
-        className={`flex min-h-[110px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 transition-all duration-200 ${
+        className={`flex min-h-[110px] w-full cursor-pointer select-none flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 ${
           isDragging
             ? 'scale-[0.995] border-primary bg-primary/5 shadow-inner'
             : 'border-border/60 bg-background/20 hover:border-primary/30 hover:bg-accent/10'
         }`}
       >
         <div
-          className={`flex h-8 w-8 items-center justify-center rounded-lg transition-transform duration-200 ${
+          className={`flex h-8 w-8 items-center justify-center rounded-lg ${
             isDragging ? 'scale-110 text-primary' : 'text-muted-foreground/50'
           }`}
         >
@@ -300,10 +299,10 @@ export const DocumentAttachments = ({
               }}
               role="button"
               tabIndex={0}
-              className="group relative flex cursor-pointer select-none items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 transition-all duration-200 hover:border-primary/20 hover:bg-accent/40"
+              className="group relative flex cursor-pointer select-none items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 hover:border-primary/20 hover:bg-accent/10"
             >
               <div className="flex min-w-0 flex-1 items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/10 bg-secondary/60 text-muted-foreground transition-colors group-hover:bg-primary/5 group-hover:text-primary">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/10 bg-secondary/60 text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary">
                   <FontAwesomeIcon
                     icon={getFileIcon(file.fileName)}
                     className="h-4 w-4"
@@ -312,7 +311,7 @@ export const DocumentAttachments = ({
 
                 <div className="flex min-w-0 flex-col space-y-0.5">
                   <span
-                    className="truncate text-xs font-semibold text-foreground/90 transition-colors group-hover:text-primary"
+                    className="truncate text-xs font-semibold text-foreground/90 group-hover:text-primary"
                     title={file.fileName}
                   >
                     {file.fileName}
@@ -330,27 +329,6 @@ export const DocumentAttachments = ({
                   </span>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelectedFile(file);
-                }}
-                disabled={deletingFileId === file.id}
-                className="ml-2 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground/40 opacity-0 transition-all duration-200 hover:bg-destructive/10 hover:text-destructive focus:opacity-100 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
-                title="Видалити файл"
-              >
-                {deletingFileId === file.id ? (
-                  <FontAwesomeIcon
-                    icon={faSpinner}
-                    className="h-3 w-3 animate-spin"
-                  />
-                ) : (
-                  <FontAwesomeIcon icon={faTrashCan} className="h-3 w-3" />
-                )}
-              </button>
             </div>
           ))}
         </div>
