@@ -27,6 +27,7 @@ interface ModalData {
   // Дані для документів
   documentId?: string;
   documentTitle?: string;
+  currentContent?: string; // ua: поточний вміст - for revision history
   onSelectRevision?: (revision: DocumentRevision) => void; // колбек для вибору версії документа
 
   // ua: дані для канбан-задач

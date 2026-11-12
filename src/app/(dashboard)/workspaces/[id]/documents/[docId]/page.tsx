@@ -1,15 +1,21 @@
+// main doc page
+// ua: головна сторінка док, що містить редактор та вкладку з додатками
+
 'use client';
 
+// react & libs
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 
+// hooks, components, services, modals, stores
 import { useDocument } from '@/features/documents/hooks/useDocument';
 import { useUpdateDocument } from '@/features/documents/hooks/useUpdateDocument';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useModal } from '@/hooks/use-modal-store'; // for revision history modal
 import { documentService } from '@/services/document.service';
 import { Editor } from '@/features/editor/components/Editor';
 import { DocumentAttachments } from '@/features/documents/components/DocumentAttachments';
@@ -23,6 +29,7 @@ export default function DocumentPage() {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { onOpen } = useModal(); // for modal to show revision history
 
   const docId = String(params.docId ?? params.docid ?? '');
 
@@ -32,10 +39,8 @@ export default function DocumentPage() {
   const [title, setTitle] = useState('');
   const [isDirty, setIsDirty] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('saved');
-  const [selectedRevision, setSelectedRevision] =
-    useState<DocumentRevision | null>(null);
+  const [editorInstanceKey, setEditorInstanceKey] = useState(0);
 
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -60,18 +65,6 @@ export default function DocumentPage() {
         setSyncStatus('saved');
       },
     });
-
-  // ua: завантажуємо історію версій документа
-  const {
-    data: revisions = [],
-    isLoading: isRevisionsLoading,
-    isError: isRevisionsError,
-  } = useQuery({
-    queryKey: ['document-revisions', docId],
-    queryFn: () => documentService.getDocumentRevisions(docId),
-    enabled: !!docId && isHistoryOpen,
-    staleTime: 0,
-  });
 
   // ua: ініціалізуємо редактор тільки при першому завантаженні документа
   // ua: повторна відповідь React Query не повинна стирати локальний текст
@@ -244,16 +237,18 @@ export default function DocumentPage() {
 
   // ua: відновлення вмісту з вибраної версії
   const handleRestoreRevision = (revision: DocumentRevision) => {
-    setHtmlContent(revision.content || '');
+    const restoredContent = revision.content || '';
 
-    const dirty = (revision.content || '') !== serverContentRef.current;
+    setHtmlContent(restoredContent);
+
+    const dirty = restoredContent !== serverContentRef.current;
 
     isDirtyRef.current = dirty;
     setIsDirty(dirty);
     setSyncStatus(dirty ? 'unsaved' : 'saved');
 
-    setSelectedRevision(null);
-    setIsHistoryOpen(false);
+    // ua: перемонтовуємо редактор, щоб він отримав відновлений вміст
+    setEditorInstanceKey((current) => current + 1);
   };
 
   if (isLoading) {
@@ -336,9 +331,16 @@ export default function DocumentPage() {
                   : 'All changes saved'}
           </span>
 
+          {/*revision history*/}
           <button
             type="button"
-            onClick={() => setIsHistoryOpen(true)}
+            onClick={() =>
+              onOpen('revisionHistory', {
+                documentId: docId,
+                currentContent: htmlContent,
+                onSelectRevision: handleRestoreRevision,
+              })
+            }
             className="rounded-md border px-3 py-2 text-sm hover:bg-accent/20"
           >
             Version history
@@ -347,7 +349,7 @@ export default function DocumentPage() {
           <button
             type="button"
             onClick={() => setIsDeleteOpen(true)}
-            className="rounded-md border hover:bg-destructive/5 px-3 py-2 text-sm text-red-600 hover:bg-accent/20"
+            className="rounded-md border px-3 py-2 text-sm text-red-600 hover:bg-accent/20 hover:bg-destructive/5"
           >
             Delete
           </button>
@@ -356,9 +358,9 @@ export default function DocumentPage() {
 
       <section className="min-h-[60vh] overflow-hidden rounded-xl border border-[#252833] bg-[#090b10]">
         <Editor
-          key={docId}
+          key={`${docId}-${editorInstanceKey}`}
           documentId={docId}
-          initialContent={document.content || DEFAULT_CONTENT}
+          initialContent={htmlContent}
           onContentChange={handleContentChange}
           editable
         />
@@ -370,116 +372,6 @@ export default function DocumentPage() {
         </h2>
         <DocumentAttachments documentId={docId} />
       </section>
-
-      {isHistoryOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setIsHistoryOpen(false);
-              setSelectedRevision(null);
-            }
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="revision-history-title"
-            className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#252833] bg-[#090b10] p-6 text-white shadow-xl"
-          >
-            <div className="flex items-center justify-between gap-4">
-              <h2 id="revision-history-title" className="text-xl font-semibold">
-                Version history
-              </h2>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsHistoryOpen(false);
-                  setSelectedRevision(null);
-                }}
-                className="rounded-md px-3 py-2 text-sm hover:bg-accent/20"
-              >
-                Close
-              </button>
-            </div>
-
-            {isRevisionsLoading ? (
-              <p className="py-8 text-sm text-gray-500">
-                Loading version history...
-              </p>
-            ) : isRevisionsError ? (
-              <p className="py-8 text-sm text-red-600">
-                Failed to load version history.
-              </p>
-            ) : revisions.length === 0 ? (
-              <p className="py-8 text-sm text-gray-500">
-                No previous versions found.
-              </p>
-            ) : (
-              <ul className="mt-4 divide-y">
-                {revisions.map((revision) => (
-                  <li key={revision.id} className="py-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium">
-                          {revision.editor?.name || 'Unknown editor'}
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500">
-                          {formatDistanceToNow(new Date(revision.createdAt), {
-                            addSuffix: true,
-                            locale: enUS,
-                          })}
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setSelectedRevision(revision)}
-                        className="rounded-md border px-3 py-2 text-sm hover:bg-accent/20"
-                      >
-                        Preview
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {selectedRevision && (
-              <div className="mt-5 border-t pt-5">
-                <h3 className="font-medium">Selected version preview</h3>
-
-                <div
-                  className="prose mt-3 max-h-64 overflow-y-auto rounded-md border p-4"
-                  dangerouslySetInnerHTML={{
-                    __html: selectedRevision.content || '',
-                  }}
-                />
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleRestoreRevision(selectedRevision)}
-                    className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-                  >
-                    Restore to editor
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRevision(null)}
-                    className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
-      )}
 
       {isDeleteOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -502,7 +394,7 @@ export default function DocumentPage() {
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setIsDeleteOpen(false)}
-                className="rounded-md border px-4 py-2 text-sm disabled:opacity-50  hover:bg-accent/20"
+                className="rounded-md border px-4 py-2 text-sm hover:bg-accent/20 disabled:opacity-50"
               >
                 Cancel
               </button>
