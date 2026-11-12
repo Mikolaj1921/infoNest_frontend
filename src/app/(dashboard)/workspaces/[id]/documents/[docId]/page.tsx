@@ -10,6 +10,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faHistory } from '@fortawesome/free-solid-svg-icons';
 
 // hooks, components, services, modals, stores
 import { useDocument } from '@/features/documents/hooks/useDocument';
@@ -343,6 +345,7 @@ export default function DocumentPage() {
             }
             className="rounded-md border px-3 py-2 text-sm hover:bg-accent/20"
           >
+            <FontAwesomeIcon icon={faHistory} className="mr-2" />
             Version history
           </button>
 
@@ -351,6 +354,7 @@ export default function DocumentPage() {
             onClick={() => setIsDeleteOpen(true)}
             className="rounded-md border px-3 py-2 text-sm text-red-600 hover:bg-accent/20 hover:bg-destructive/5"
           >
+            <FontAwesomeIcon icon={faTrash} className="mr-2" />
             Delete
           </button>
         </div>

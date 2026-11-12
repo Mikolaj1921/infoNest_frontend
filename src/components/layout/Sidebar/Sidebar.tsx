@@ -1,12 +1,15 @@
 'use client';
 
-// ua: для керування станом мобайл меню
-import { useState } from 'react';
+// ua: для керування станом меню та шириною сайдбару
+import { useRef, useState, type CSSProperties } from 'react';
+
 // ua: Імпорти навігації Next.js та Zustand-стору
 import Link from 'next/link';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
+
 // zustand store
 import { useAuthUser } from '@/store/useAuthStore';
+
 // ua: custom hook для отримання списку воркспейсів
 import { useWorkspaces } from '@/features/workspaces/hooks/useWorkspaces';
 
@@ -17,8 +20,10 @@ import { CreateWorkspaceModal } from '@/features/workspaces/components/CreateWor
 
 // ua: custom hook для отримання структури воркспейсу (кат + док)
 import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
+
 // ua: для відображення станів завантаження та помилок
 import { SidebarSkeleton } from '@/components/ui/skeletons/SidebarSkeleton';
+
 // ua: для відображення дерева навігації по кат + док
 import { NavTree } from '@/features/documents/components/NavTree';
 
@@ -206,8 +211,8 @@ const WorkspaceNavigation = ({
                       type="button"
                       onClick={onCreateCategory}
                       className="rounded-md p-1.5 text-muted-foreground hover:bg-accent/20 hover:text-foreground"
-                      title="Створити папку"
-                      aria-label={`Створити папку у ${workspace.name}`}
+                      title="Create folder"
+                      aria-label={`Create folder in ${workspace.name}`}
                     >
                       <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
                     </button>
@@ -247,6 +252,15 @@ export const Sidebar = () => {
   // ua: стан для мобільного сайдбару
   const [isOpen, setIsOpen] = useState(false);
 
+  // ua: ширина сайдбару для desktop
+  const [sidebarWidth, setSidebarWidth] = useState(256);
+
+  // ua: зберігаємо початкові координати перетягування
+  const resizeStartRef = useRef<{
+    startX: number;
+    startWidth: number;
+  } | null>(null);
+
   // ua: зберігаємо стан розгортання кожного воркспейсу
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<
     Record<string, boolean>
@@ -273,6 +287,71 @@ export const Sidebar = () => {
     }));
   };
 
+  // ua: початок зміни ширини сайдбару
+  const handleResizeStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+
+    event.preventDefault();
+
+    resizeStartRef.current = {
+      startX: event.clientX,
+      startWidth: sidebarWidth,
+    };
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  // ua: зміна ширини під час перетягування
+  const handleResizeMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!resizeStartRef.current) {
+      return;
+    }
+
+    const delta = event.clientX - resizeStartRef.current.startX;
+
+    const newWidth = Math.min(
+      480,
+      Math.max(220, resizeStartRef.current.startWidth + delta),
+    );
+
+    setSidebarWidth(newWidth);
+  };
+
+  // ua: завершення перетягування
+  const handleResizeEnd = () => {
+    resizeStartRef.current = null;
+  };
+
+  // ua: повернення стандартної ширини
+  const handleResizeReset = () => {
+    setSidebarWidth(256);
+  };
+
+  // ua: зміна ширини сайдбару з клавіатури
+  const handleResizeKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      setSidebarWidth((width) => Math.max(220, width - 10));
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      setSidebarWidth((width) => Math.min(480, width + 10));
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault();
+      setSidebarWidth(220);
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault();
+      setSidebarWidth(480);
+    }
+  };
+
   return (
     <>
       {/* mobile menu toggle */}
@@ -297,8 +376,15 @@ export const Sidebar = () => {
 
       {/* Сайдбар для навігації по воркспейсах */}
       <aside
+        style={
+          {
+            '--sidebar-width': `${sidebarWidth}px`,
+          } as CSSProperties
+        }
         className={`
-          fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-card/95 backdrop-blur-xl transition-transform duration-300 md:static md:translate-x-0 md:bg-card/30
+          relative flex h-full w-64 flex-col border-r border-border bg-card/95 backdrop-blur-xl transition-transform duration-300
+          fixed inset-y-0 left-0 z-40
+          md:static md:z-auto md:h-auto md:w-[var(--sidebar-width)] md:min-w-[220px] md:max-w-[480px] md:flex-shrink-0 md:translate-x-0 md:bg-card/30
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
@@ -363,8 +449,8 @@ export const Sidebar = () => {
               type="button"
               onClick={() => setIsCreateModalOpen(true)}
               className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              title="Створити воркспейс"
-              aria-label="Створити воркспейс"
+              title="Create workspace"
+              aria-label="Create workspace"
             >
               <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
             </button>
@@ -424,6 +510,36 @@ export const Sidebar = () => {
               <span className="truncate text-[10px] text-muted-foreground">
                 {user?.email || 'email@example.com'}
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ua: рухома межа для зміни ширини сайдбару на desktop - для розширення сайдбару */}
+        <div
+          role="separator"
+          aria-label="Resize sidebar"
+          aria-orientation="vertical"
+          aria-valuemin={220}
+          aria-valuemax={480}
+          aria-valuenow={Math.round(sidebarWidth)}
+          tabIndex={0}
+          onPointerDown={handleResizeStart}
+          onPointerMove={handleResizeMove}
+          onPointerUp={handleResizeEnd}
+          onPointerCancel={handleResizeEnd}
+          onDoubleClick={handleResizeReset}
+          onKeyDown={handleResizeKeyDown}
+          className="group absolute right-0 top-0 z-50 hidden h-full w-3 translate-x-1/2 cursor-col-resize touch-none select-none md:block"
+        >
+          {/* ua: видимий індикатор перетягування по центру */}
+          <div className="absolute left-1/2 top-1/2 flex h-12 w-3 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background shadow-sm transition-all duration-200 group-hover:border-primary/30  group-hover:shadow-md group-focus-visible:border-primary">
+            <div className="grid grid-cols-2 gap-[3px]">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <span
+                  key={index}
+                  className="h-[3px] w-[3px] rounded-full bg-muted-foreground/60 transition-colors group-hover:bg-primary"
+                />
+              ))}
             </div>
           </div>
         </div>
