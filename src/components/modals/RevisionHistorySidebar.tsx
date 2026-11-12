@@ -13,7 +13,7 @@ import {
   faFileCode,
 } from '@fortawesome/free-solid-svg-icons';
 import { formatDistanceToNow } from 'date-fns';
-import { uk } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import Image from 'next/image';
 
 // ua: тип вибраної версії для попереднього перегляду
@@ -229,7 +229,7 @@ const RevisionHistoryContent = ({
                                 new Date(revision.createdAt),
                                 {
                                   addSuffix: true,
-                                  locale: uk,
+                                  locale: enUS,
                                 },
                               )}
                             </span>

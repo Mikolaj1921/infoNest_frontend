@@ -7,7 +7,7 @@ import { validateUploadedFile } from '@/utils/file-validator';
 import { UploadProgress } from './UploadProgress';
 import { DocumentPreviewModal } from './DocumentPreviewModal';
 import { formatDistanceToNow } from 'date-fns';
-import { uk } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPaperclip,
@@ -71,7 +71,7 @@ export const DocumentAttachments = ({
     try {
       await fileService.deleteFile(fileId);
 
-      toast.success('Файл успішно видалено');
+      toast.success('File deleted successfully');
 
       setSelectedFile(null);
 
@@ -82,7 +82,7 @@ export const DocumentAttachments = ({
       return true;
     } catch (error) {
       console.error('Failed to delete file:', error);
-      toast.error('Не вдалося видалити файл');
+      toast.error('Failed to delete file');
       return false;
     } finally {
       setDeletingFileId(null);
@@ -92,7 +92,7 @@ export const DocumentAttachments = ({
   // ua: відкриття файлу в модальному вікні
   const handleFileClick = (file: FileAttachment) => {
     if (!isSupportedFile(file.fileName)) {
-      toast.error('Цей формат файлу не підтримується для перегляду.');
+      toast.error('This file format is not supported for preview.');
       return;
     }
 
@@ -109,7 +109,7 @@ export const DocumentAttachments = ({
     const validation = validateUploadedFile(file);
 
     if (!validation.isValid) {
-      toast.error(validation.error || 'Помилка валідації файлу');
+      toast.error(validation.error || 'File validation failed');
 
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -130,14 +130,14 @@ export const DocumentAttachments = ({
         );
       });
 
-      toast.success('Файл успішно завантажено');
+      toast.success('File uploaded successfully');
 
       await queryClient.invalidateQueries({
         queryKey: ['document-files', documentId],
       });
     } catch (error) {
       console.error('Upload failed:', error);
-      toast.error('Не вдалося завантажити файл');
+      toast.error('Failed to upload file');
     } finally {
       setUploadState(null);
 
@@ -264,8 +264,8 @@ export const DocumentAttachments = ({
           </p>
 
           <p className="text-[10px] font-medium text-muted-foreground">
-            Дозволено завантажувати лише PDF-файли та зображення. Максимальний
-            розмір — 5 MB.
+            Only PDF files and images are allowed for upload. Maximum size — 5
+            MB.
           </p>
         </div>
       </div>
@@ -323,7 +323,7 @@ export const DocumentAttachments = ({
                     <span>
                       {formatDistanceToNow(new Date(file.createdAt), {
                         addSuffix: true,
-                        locale: uk,
+                        locale: enUS,
                       })}
                     </span>
                   </span>
