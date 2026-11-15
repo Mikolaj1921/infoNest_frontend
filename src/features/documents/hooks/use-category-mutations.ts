@@ -21,7 +21,8 @@ export const useCreateCategory = () => {
       categoryService.createCategory(workspaceId, dto.name),
     onSuccess: () => {
       toast.success('Folder created successfully');
-      // ua: валідація кешу структури для миттєвого оновлення Сайдбару
+
+      // ua: валідація кешу структури для оновлення сайдбару
       queryClient.invalidateQueries({
         queryKey: ['workspace-structure', workspaceId],
       });
@@ -91,36 +92,49 @@ export const useDeleteCategory = () => {
   return useMutation({
     mutationFn: (categoryId: string) =>
       categoryService.deleteCategory(categoryId),
-    onSuccess: (_, categoryId) => {
+
+    onSuccess: async (_, categoryId) => {
+      // ua: отримуємо актуальний кеш структури воркспейсу
+      const cachedData = queryClient.getQueryData<
+        { id: string; documents: { id: string }[] }[]
+      >(['workspace-structure', workspaceId]);
+
+      // ua: перевіряємо, чи містила видалена категорія активний документ
+      const deletedCategory = cachedData?.find(
+        (category) => category.id === categoryId,
+      );
+
+      const wasActiveDocInside = deletedCategory?.documents.some(
+        (doc) => doc.id === activeDocId,
+      );
+
+      // ua: миттєво прибираємо видалену категорію з кешу
+      queryClient.setQueryData(
+        ['workspace-structure', workspaceId],
+        (
+          current: { id: string; documents: { id: string }[] }[] | undefined,
+        ) => {
+          if (!current) {
+            return current;
+          }
+
+          return current.filter((category) => category.id !== categoryId);
+        },
+      );
+
       toast.success('Folder and all its documents deleted');
 
-      // ua: Інвалідація кешу для оновлення дерева документів
-      queryClient.invalidateQueries({
+      // ua: синхронізуємо кеш із бекендом
+      await queryClient.invalidateQueries({
         queryKey: ['workspace-structure', workspaceId],
       });
 
-      // поточний стан структури з кешу, щоб перевірити, чи знаходився користувач у документі з цієї папки
-      const cachedData = queryClient.getQueryData<{
-        data: { id: string; documents: { id: string }[] }[];
-      }>(['workspace-structure', workspaceId]);
-
-      if (cachedData?.data) {
-        const deletedCategory = cachedData.data.find(
-          (cat) => cat.id === categoryId,
-        );
-        const wasActiveDocInside = deletedCategory?.documents.some(
-          (doc) => doc.id === activeDocId,
-        );
-
-        // якщо видалена папка була активною або містила відкритий документ редірект на головну воркспейсу
-        if (wasActiveDocInside || !activeDocId) {
-          router.push(`/workspaces/${workspaceId}`);
-        }
-      } else {
-        //якщо кеш порожній, редірект на головну сторінку воркспейсу
+      // ua: якщо видалена папка містила відкритий документ — повертаємося до воркспейсу
+      if (wasActiveDocInside) {
         router.push(`/workspaces/${workspaceId}`);
       }
     },
+
     onError: () => {
       toast.error('Failed to delete folder. Please try again.');
     },

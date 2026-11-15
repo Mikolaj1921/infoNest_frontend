@@ -1,7 +1,7 @@
 'use client';
 
 // ua: для керування станом меню та шириною сайдбару
-import { useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 // ua: Імпорти навігації Next.js та Zustand-стору
 import Link from 'next/link';
@@ -41,6 +41,9 @@ import {
   faFolderOpen,
   faTasks,
   faChalkboard,
+  faEllipsisVertical,
+  faPen,
+  faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 
 type WorkspaceSection = 'documents' | 'kanban' | 'whiteboard';
@@ -50,6 +53,7 @@ type WorkspaceNavigationProps = {
     id: string;
     name: string;
   };
+  isOwner: boolean;
   isExpanded: boolean;
   activeWorkspaceId: string;
   activeSection: WorkspaceSection;
@@ -104,6 +108,7 @@ const WorkspaceDocuments = ({
 // ua: навігація всередині окремого воркспейсу
 const WorkspaceNavigation = ({
   workspace,
+  isOwner,
   isExpanded,
   activeWorkspaceId,
   activeSection,
@@ -113,6 +118,43 @@ const WorkspaceNavigation = ({
 }: WorkspaceNavigationProps) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { onOpen } = useModal();
+
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+
+  // ua: посилання на кнопку та меню дій воркспейсу
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  // ua: закриття меню при кліку за його межами або натисканні Escape
+  useEffect(() => {
+    if (!isActionsOpen) return;
+
+    const handleOutsideClick = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (
+        target instanceof Node &&
+        actionsRef.current &&
+        !actionsRef.current.contains(target)
+      ) {
+        setIsActionsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsActionsOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isActionsOpen]);
 
   const isActiveWorkspace = activeWorkspaceId === workspace.id;
   const currentTab = searchParams.get('tab');
@@ -148,30 +190,108 @@ const WorkspaceNavigation = ({
     },
   ];
 
+  // ua: відкриття модалки редагування воркспейсу
+  const handleEditWorkspace = () => {
+    setIsActionsOpen(false);
+
+    onOpen('editWorkspace', {
+      workspaceId: workspace.id,
+      workspaceName: workspace.name,
+    });
+  };
+
+  // ua: відкриття модалки видалення воркспейсу
+  const handleDeleteWorkspace = () => {
+    setIsActionsOpen(false);
+
+    onOpen('deleteWorkspace', {
+      workspaceId: workspace.id,
+      workspaceName: workspace.name,
+    });
+  };
+
   return (
-    <div className="mb-1">
+    <div className={`relative mb-1 ${isActionsOpen ? 'z-50' : 'z-0'}`}>
       {/* ua: кнопка розгортання воркспейсу */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium ${
-          isActiveWorkspace
-            ? 'text-foreground'
-            : 'text-muted-foreground hover:bg-accent/20 hover:text-foreground'
-        }`}
-        aria-expanded={isExpanded}
-      >
-        <FontAwesomeIcon
-          icon={isExpanded ? faChevronDown : faChevronRight}
-          className="h-3 w-3 shrink-0 text-muted-foreground"
-        />
+      <div className="group relative flex items-center rounded-lg hover:bg-accent/20">
+        <button
+          type="button"
+          onClick={onToggle}
+          className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2 pr-9 text-left text-sm font-medium ${
+            isActiveWorkspace
+              ? 'text-foreground'
+              : 'text-muted-foreground group-hover:text-foreground'
+          }`}
+          aria-expanded={isExpanded}
+        >
+          <FontAwesomeIcon
+            icon={isExpanded ? faChevronDown : faChevronRight}
+            className="h-3 w-3 shrink-0 text-muted-foreground"
+          />
 
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">
-          {getInitials(workspace.name)}
-        </span>
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">
+            {getInitials(workspace.name)}
+          </span>
 
-        <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
-      </button>
+          <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+        </button>
+
+        {/* ua: меню керування воркспейсом доступне тільки власнику */}
+        {isOwner && (
+          <div
+            ref={actionsRef}
+            className="absolute right-1 top-1/2 z-10 -translate-y-1/2"
+          >
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setIsActionsOpen((previous) => !previous);
+              }}
+              className={`rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground ${
+                isActionsOpen
+                  ? 'bg-accent text-foreground opacity-100'
+                  : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+              }`}
+              title="Workspace actions"
+              aria-label={`Actions for ${workspace.name}`}
+              aria-expanded={isActionsOpen}
+            >
+              <FontAwesomeIcon
+                icon={faEllipsisVertical}
+                className="h-3.5 w-3.5"
+              />
+            </button>
+
+            {isActionsOpen && (
+              <>
+                <div className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-lg border border-border bg-popover p-1 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={handleEditWorkspace}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-foreground hover:bg-accent"
+                  >
+                    <FontAwesomeIcon
+                      icon={faPen}
+                      className="h-3 w-3 text-muted-foreground"
+                    />
+                    <span>Rename</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDeleteWorkspace}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-destructive hover:bg-destructive/10"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ua: розділи воркспейсу */}
       {isExpanded && (
@@ -358,7 +478,7 @@ export const Sidebar = () => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed left-4 top-3 z-50 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border bg-background/80 text-foreground backdrop-blur-md transition-colors hover:bg-accent md:hidden"
+        className="fixed left-4 top-3 z-50 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border bg-background/80 text-foreground backdrop-blur-md  hover:bg-accent md:hidden"
         aria-label="Toggle Menu"
         aria-expanded={isOpen}
       >
@@ -393,13 +513,13 @@ export const Sidebar = () => {
           <Link
             href="/workspaces"
             onClick={closeMenu}
-            className="group flex w-full items-center justify-between rounded-lg border border-border bg-background/50 p-2 text-sm font-semibold transition-colors hover:bg-accent/10"
+            className="group flex w-full items-center justify-between rounded-lg border border-border bg-background/50 p-2 text-sm font-semibold  hover:bg-accent/10"
           >
             <div className="flex min-w-0 items-center gap-2">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary text-[10px] font-bold text-primary-foreground">
                 IN
               </div>
-              <span className="truncate text-foreground transition-colors group-hover:text-primary">
+              <span className="truncate text-foreground  group-hover:text-primary">
                 infoNest Space
               </span>
             </div>
@@ -416,7 +536,7 @@ export const Sidebar = () => {
           <Link
             href="/workspaces"
             onClick={closeMenu}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${
               isActive('/workspaces')
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -429,7 +549,7 @@ export const Sidebar = () => {
           <button
             type="button"
             onClick={closeMenu}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-muted-foreground  hover:bg-accent hover:text-foreground"
           >
             <FontAwesomeIcon icon={faMagnifyingGlass} className="h-4 w-4" />
             <span>Search</span>
@@ -448,7 +568,7 @@ export const Sidebar = () => {
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(true)}
-              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="rounded-md p-1 text-muted-foreground  hover:bg-accent hover:text-foreground"
               title="Create workspace"
               aria-label="Create workspace"
             >
@@ -463,6 +583,7 @@ export const Sidebar = () => {
               <WorkspaceNavigation
                 key={workspace.id}
                 workspace={workspace}
+                isOwner={workspace.ownerId === user?.id}
                 isExpanded={
                   workspace.id === workspaceId ||
                   Boolean(expandedWorkspaces[workspace.id])
@@ -488,7 +609,7 @@ export const Sidebar = () => {
           <Link
             href="/profile"
             onClick={closeMenu}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium  ${
               isActive('/profile')
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -537,7 +658,7 @@ export const Sidebar = () => {
               {Array.from({ length: 6 }).map((_, index) => (
                 <span
                   key={index}
-                  className="h-[3px] w-[3px] rounded-full bg-muted-foreground/60 transition-colors group-hover:bg-primary"
+                  className="h-[3px] w-[3px] rounded-full bg-muted-foreground/60  group-hover:bg-primary"
                 />
               ))}
             </div>

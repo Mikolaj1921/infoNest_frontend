@@ -20,6 +20,9 @@ import { CreateTaskModal } from '@/components/modals/CreateTaskModal';
 import { CreateTaskColumnModal } from '@/components/modals/CreateTaskColumnModal';
 import { EditTaskColumnModal } from '@/components/modals/EditTaskColumnModal';
 import { DeleteTaskConfirmationModal } from '@/components/modals/DeleteTaskConfirmationModal';
+// ua: модалки для керування воркспейсами
+import { EditWorkspaceModal } from '@/components/modals/EditWorkspaceModal';
+import { DeleteWorkspaceConfirmModal } from '@/components/modals/DeleteWorkspaceConfirmModal';
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -53,6 +56,9 @@ export const ModalProvider = () => {
       <CreateTaskColumnModal />
       <EditTaskColumnModal />
       <DeleteTaskConfirmationModal />
+      {/* ua: модалки для керування воркспейсами */}
+      <EditWorkspaceModal />
+      <DeleteWorkspaceConfirmModal />
     </>
   );
 };

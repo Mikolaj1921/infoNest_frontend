@@ -221,10 +221,6 @@ export default function DocumentPage() {
         queryKey: ['workspace-structure'],
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: ['document', docId],
-      });
-
       toast.success('Document deleted');
 
       router.back();

@@ -16,6 +16,8 @@ export type ModalType =
   | 'editBoardTask' // ua: апдейт - тип для редагування завдання
   | 'createTaskColumn'
   | 'editTaskColumn'
+  | 'editWorkspace'
+  | 'deleteWorkspace'
   | 'confirmDeleteTask';
 
 // ua: інтерфейс даних
@@ -23,7 +25,9 @@ interface ModalData {
   // Дані для категорій (папок)
   categoryId?: string;
   categoryName?: string;
-
+  // Дані для воркспейсів
+  workspaceId?: string;
+  workspaceName?: string;
   // Дані для документів
   documentId?: string;
   documentTitle?: string;

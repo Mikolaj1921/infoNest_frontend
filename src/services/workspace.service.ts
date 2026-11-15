@@ -78,7 +78,7 @@ export const workspaceService = {
     id: string,
     dto: Partial<UpdateWorkspaceDTO>,
   ): Promise<Workspace> => {
-    const { data } = await api.put<SingleWorkspaceResponse>(
+    const { data } = await api.patch<SingleWorkspaceResponse>(
       `/workspaces/${id}`,
       dto,
     );
