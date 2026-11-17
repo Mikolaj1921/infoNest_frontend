@@ -27,6 +27,7 @@ import {
   useWorkspaceKanban,
   useCreateColumn,
   useReorderTasks,
+  useReorderCategories,
 } from '@/hooks/useKanbanData';
 import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
 // modals
@@ -40,6 +41,10 @@ import { useModal } from '@/hooks/use-modal-store';
 import { BoardTask, TaskCategory } from '@/types/kanban';
 
 type TaskGroups = Record<string, BoardTask[]>;
+type SortableColumn = {
+  id: string;
+  column: TaskCategory;
+};
 type WorkspaceTab = 'documents' | 'kanban' | 'whiteboard';
 
 function cloneGroups(groups: TaskGroups): TaskGroups {
@@ -74,6 +79,7 @@ export default function WorkspacePage() {
 
   const createColumnMutation = useCreateColumn(workspaceId);
   const reorderTasksMutation = useReorderTasks(workspaceId);
+  const reorderCategoriesMutation = useReorderCategories(workspaceId);
 
   // ua: активна вкладка синхронізована з URL, щоб Sidebar міг відкривати потрібний розділ
   const tabParam = searchParams.get('tab');
@@ -99,6 +105,11 @@ export default function WorkspacePage() {
   };
 
   const [dragGroups, setDragGroups] = useState<TaskGroups | null>(null);
+  // ua: локальний порядок колонок під час перетягування
+  const [dragColumns, setDragColumns] = useState<TaskCategory[] | null>(null);
+
+  const columnGroupsRef = useRef<SortableColumn[]>([]);
+  const activeDragTypeRef = useRef<'task' | 'column' | null>(null);
 
   // whiteboard - тимчасовий локальний стан до інтеграції з бекендом
   //const [whiteboardElements, setWhiteboardElements] =
@@ -108,8 +119,36 @@ export default function WorkspacePage() {
   const snapshotRef = useRef<TaskGroups | null>(null);
   const draggingRef = useRef(false);
 
-  const handleDragStart = () => {
+  // ua: початок перетягування завдання або колонки
+  const handleDragStart = (
+    event: Parameters<
+      NonNullable<React.ComponentProps<typeof DragDropProvider>['onDragStart']>
+    >[0],
+  ) => {
     if (!categories) return;
+
+    const source = event.operation.source;
+
+    if (!source) return;
+
+    // ua: окрема ініціалізація перетягування колонок
+    if (String(source.id).startsWith('column:')) {
+      activeDragTypeRef.current = 'column';
+
+      columnGroupsRef.current = categories.map((column) => ({
+        id: `column:${column.id}`,
+        column,
+      }));
+
+      setDragColumns(categories);
+
+      void queryClient.cancelQueries({ queryKey });
+
+      return;
+    }
+
+    // ua: наявна ініціалізація перетягування тасок
+    activeDragTypeRef.current = 'task';
 
     const initialGroups = groupsFromCategories(categories);
 
@@ -122,12 +161,30 @@ export default function WorkspacePage() {
     void queryClient.cancelQueries({ queryKey });
   };
 
+  // ua: оновлення локального порядку під час перетягування
   const handleDragOver = (
     event: Parameters<
       NonNullable<React.ComponentProps<typeof DragDropProvider>['onDragOver']>
     >[0],
   ) => {
-    if (!draggingRef.current) return;
+    // ua: перетягування колонок
+    if (activeDragTypeRef.current === 'column') {
+      const nextColumns = move(
+        columnGroupsRef.current,
+        event,
+      ) as SortableColumn[];
+
+      columnGroupsRef.current = nextColumns;
+
+      setDragColumns(nextColumns.map((item) => item.column));
+
+      return;
+    }
+
+    // ua: наявне перетягування тасок
+    if (activeDragTypeRef.current !== 'task' || !draggingRef.current) {
+      return;
+    }
 
     const nextGroups = move(groupsRef.current, event) as TaskGroups;
 
@@ -145,23 +202,21 @@ export default function WorkspacePage() {
     setDragGroups(normalizedGroups);
   };
 
-  // handler dnd - ua: хендлер для перетегувань таск
+  // handler dnd - ua: завершення перетягування колонок або тасок
   const handleDragEnd = (
     event: Parameters<
       NonNullable<React.ComponentProps<typeof DragDropProvider>['onDragEnd']>
     >[0],
   ) => {
+    // ua: скасування перетягування
     if (event.canceled) {
-      const snapshot = snapshotRef.current;
-
-      if (snapshot) {
-        const restoredGroups = cloneGroups(snapshot);
-        groupsRef.current = restoredGroups;
-        setDragGroups(null);
-      }
-
       snapshotRef.current = null;
       draggingRef.current = false;
+      activeDragTypeRef.current = null;
+
+      setDragGroups(null);
+      setDragColumns(null);
+
       return;
     }
 
@@ -170,9 +225,63 @@ export default function WorkspacePage() {
     if (!source || !isSortable(source)) {
       snapshotRef.current = null;
       draggingRef.current = false;
+      activeDragTypeRef.current = null;
+
       setDragGroups(null);
+      setDragColumns(null);
+
       return;
     }
+
+    // ua: завершення перетягування колонок
+    if (activeDragTypeRef.current === 'column') {
+      const currentCategories =
+        queryClient.getQueryData<TaskCategory[]>(queryKey);
+
+      const orderedColumns = columnGroupsRef.current;
+
+      activeDragTypeRef.current = null;
+      setDragColumns(null);
+
+      if (!currentCategories || !orderedColumns.length) {
+        return;
+      }
+
+      const hasOrderChanged = orderedColumns.some(
+        (item, index) => item.column.id !== currentCategories[index]?.id,
+      );
+
+      if (!hasOrderChanged) {
+        return;
+      }
+
+      const previousKanbanData = currentCategories.map((column) => ({
+        ...column,
+        boardTasks: [...(column.boardTasks ?? [])],
+      }));
+
+      const nextCategories = orderedColumns.map((item, index) => ({
+        ...item.column,
+        position: index,
+      }));
+
+      // ua: оптимістичне оновлення порядку колонок
+      queryClient.setQueryData(queryKey, nextCategories);
+
+      // ua: збереження нового порядку на бекенді
+      reorderCategoriesMutation.mutate({
+        categories: nextCategories.map((column, index) => ({
+          id: column.id,
+          position: index,
+        })),
+        previousKanbanData,
+      });
+
+      return;
+    }
+
+    // ua: завершення перетягування тасок
+    activeDragTypeRef.current = null;
 
     const initialColumnId = String(source.initialGroup ?? '');
     const destinationColumnId = String(source.group ?? '');
@@ -239,7 +348,8 @@ export default function WorkspacePage() {
     onOpen('createTaskColumn');
   };
 
-  const displayedCategories = categories?.map((column) => ({
+  // ua: відображення колонок з врахуванням поточного перетягування
+  const displayedCategories = (dragColumns ?? categories)?.map((column) => ({
     ...column,
     boardTasks: dragGroups?.[column.id] ?? column.boardTasks ?? [],
   }));
@@ -500,7 +610,10 @@ export default function WorkspacePage() {
           >
             <div
               className={`kanban-board-scroll flex-1 min-h-0 overflow-auto pb-4 flex items-start gap-4 select-none ${
-                reorderTasksMutation.isPending ? 'pointer-events-none' : ''
+                reorderTasksMutation.isPending ||
+                reorderCategoriesMutation.isPending
+                  ? 'pointer-events-none'
+                  : ''
               }`}
             >
               {isLoading ? (
@@ -508,10 +621,11 @@ export default function WorkspacePage() {
                   Loading board structure...
                 </div>
               ) : displayedCategories?.length ? (
-                displayedCategories.map((column) => (
+                displayedCategories.map((column, index) => (
                   <BoardColumn
                     key={column.id}
                     column={column}
+                    index={index}
                     onAddTask={(columnId) =>
                       onOpen('createBoardTask', { columnId })
                     }

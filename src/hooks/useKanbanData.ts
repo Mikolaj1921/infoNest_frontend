@@ -172,6 +172,39 @@ export const useReorderTasks = (workspaceId: string) => {
   });
 };
 
+// ua: хук перетягування колонок (dnd)
+export const useReorderCategories = (workspaceId: string) => {
+  const queryClient = useQueryClient();
+  const queryKey = ['workspace-kanban', workspaceId];
+
+  type ReorderPayload = {
+    id: string;
+    position: number;
+  };
+
+  type ReorderVariables = {
+    categories: ReorderPayload[];
+    previousKanbanData: TaskCategory[];
+  };
+
+  return useMutation({
+    mutationFn: ({ categories }: ReorderVariables) =>
+      taskService.reorderCategories(workspaceId, categories),
+
+    onError: (_error, variables) => {
+      queryClient.setQueryData(queryKey, variables.previousKanbanData);
+
+      toast.error('Failed to save the order of columns');
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey,
+      });
+    },
+  });
+};
+
 // dnd doc
 
 // link doc (закріплення документа)

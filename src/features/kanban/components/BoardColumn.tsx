@@ -1,5 +1,3 @@
-// ua: модалка колонки
-
 'use client';
 
 import React from 'react';
@@ -9,16 +7,37 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import { useModal } from '@/hooks/use-modal-store';
 import { useDroppable } from '@dnd-kit/react';
+import { useSortable } from '@dnd-kit/react/sortable';
 
 interface BoardColumnProps {
   column: TaskCategory;
+  index: number;
   onAddTask: (columnId: string) => void;
 }
 
-export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
+export const BoardColumn = ({ column, index, onAddTask }: BoardColumnProps) => {
   const { onOpen } = useModal();
   const tasks = column.boardTasks ?? [];
 
+  // ua: перетягування самої колонки
+  const {
+    ref: sortableRef,
+    isDragging,
+    isDropping,
+  } = useSortable({
+    id: `column:${column.id}`,
+    index,
+    group: 'columns',
+    type: 'column',
+    accept: 'column',
+    transition: {
+      duration: 200,
+      easing: 'cubic-bezier(0.2, 0, 0, 1)',
+      idle: true,
+    },
+  });
+
+  // ua: зона для перетягування карток завдань у колонку
   const { ref: droppableRef, isDropTarget } = useDroppable({
     id: column.id,
     type: 'column',
@@ -26,8 +45,25 @@ export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
   });
 
   return (
-    <div className="w-72 shrink-0 self-start bg-secondary/20 rounded-2xl border border-border/40 p-3.5 flex flex-col max-h-[calc(100vh-220px)] text-left">
-      <div className="flex items-center justify-between gap-3 pb-2.5">
+    <div
+      ref={sortableRef}
+      data-column-id={column.id}
+      className={`
+        w-72 shrink-0 self-start
+        bg-secondary/20 rounded-2xl
+        border border-border/40 p-3.5
+        flex flex-col max-h-[calc(100vh-220px)]
+        text-left
+        ${isDragging ? 'opacity-40' : ''}
+        ${isDropping ? 'scale-[0.99]' : ''}
+      `}
+      style={{
+        position: 'relative',
+        zIndex: isDragging ? 10 : 0,
+        willChange: isDragging ? 'transform' : 'auto',
+      }}
+    >
+      <div className="flex items-center justify-between gap-3 pb-2.5 cursor-grab active:cursor-grabbing">
         <div className="flex items-center gap-2 min-w-0">
           <h3
             className="text-xs font-bold text-foreground/90 truncate"
@@ -64,15 +100,14 @@ export const BoardColumn = ({ column, onAddTask }: BoardColumnProps) => {
           space-y-2.5 px-0.5 py-1
           rounded-xl
           transition-colors duration-150
-          
         `}
       >
         {tasks.length > 0 ? (
-          tasks.map((task, index) => (
+          tasks.map((task, taskIndex) => (
             <SortableTaskCard
               key={task.id}
               task={task}
-              index={index}
+              index={taskIndex}
               columnId={column.id}
             />
           ))

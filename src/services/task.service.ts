@@ -31,6 +31,17 @@ export const taskService = {
     return data.data.category;
   },
 
+  // ua: оновлення позицій колонок при перетягуванні (drag and drop)
+  reorderCategories: async (
+    workspaceId: string,
+    categories: Array<{ id: string; position: number }>,
+  ): Promise<void> => {
+    await api.patch('/task-categories/reorder', {
+      workspaceId,
+      categories,
+    });
+  },
+
   // ua: створення нової картки задачі всередині колонки
   createTask: async (payload: {
     title: string;
