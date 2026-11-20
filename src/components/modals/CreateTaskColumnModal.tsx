@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 const columnSchema = z.object({
-  name: z.string().min(1, 'Name of the column is required').max(100),
+  name: z.string().trim().min(1, 'Name of the column is required').max(100),
 });
 
 type ColumnFormValues = {
