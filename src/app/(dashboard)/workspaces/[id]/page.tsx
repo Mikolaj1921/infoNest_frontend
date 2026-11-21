@@ -29,7 +29,7 @@ import {
   useReorderTasks,
   useReorderCategories,
 } from '@/features/kanban/hooks/useKanbanData';
-import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
+import { useWorkspaceStructure } from '@/features/workspaces/hooks/useWorkspaceStructure';
 // modals
 import { BoardColumn } from '@/features/kanban/components/BoardColumn';
 // whiteboard

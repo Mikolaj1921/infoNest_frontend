@@ -1,7 +1,7 @@
 // ua: готові ai тести для кастом хука useAutosaveDocument
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useAutosaveDocument } from './useAutosaveDocument';
+import { useAutosaveDocument } from '../useAutosaveDocument';
 import { documentService } from '@/services/document.service';
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { WorkspaceDocument, DocumentVisibility } from '@/types/document';

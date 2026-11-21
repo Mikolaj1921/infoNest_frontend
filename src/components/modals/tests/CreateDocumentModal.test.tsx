@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { CreateDocumentModal } from './CreateDocumentModal';
 import { useModal } from '@/hooks/use-modal-store';
-import { useCreateDocument } from '@/features/documents/hooks/use-document-mutations';
+import { useCreateDocument } from '@/features/documents/hooks/use-document-mutations.tsX';
 import React from 'react';
 
 vi.mock('@/hooks/use-modal-store', () => ({

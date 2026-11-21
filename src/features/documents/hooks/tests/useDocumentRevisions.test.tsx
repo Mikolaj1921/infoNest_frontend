@@ -3,7 +3,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useDocumentRevisions } from './useDocumentRevisions';
+import { useDocumentRevisions } from '../useDocumentRevisions';
 import { documentService } from '@/services/document.service';
 import { DocumentRevision } from '@/types/document';
 import React from 'react';

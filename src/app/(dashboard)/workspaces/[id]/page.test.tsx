@@ -19,7 +19,7 @@ import {
   useReorderTasks,
   useReorderCategories,
 } from '@/features/kanban/hooks/useKanbanData';
-import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
+import { useWorkspaceStructure } from '@/features/workspaces/hooks/useWorkspaceStructure';
 import type { TaskCategory } from '@/types/kanban';
 
 // ua: Мокаємо навігацію Next.js та менеджер модальних вікон

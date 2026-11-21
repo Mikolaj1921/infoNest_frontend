@@ -19,7 +19,7 @@ import { useModal } from '@/hooks/use-modal-store';
 import { CreateWorkspaceModal } from '@/features/workspaces/components/CreateWorkspaceModal';
 
 // ua: custom hook для отримання структури воркспейсу (кат + док)
-import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
+import { useWorkspaceStructure } from '@/features/workspaces/hooks/useWorkspaceStructure';
 
 // ua: для відображення станів завантаження та помилок
 import { SidebarSkeleton } from '@/components/ui/skeletons/SidebarSkeleton';

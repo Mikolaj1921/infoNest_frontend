@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DeleteDocumentConfirmModal } from './DeleteDocumentConfirmModal';
 import { useModal } from '@/hooks/use-modal-store';
-import { useDeleteDocument } from '@/features/documents/hooks/use-document-mutations';
+import { useDeleteDocument } from '@/features/documents/hooks/use-document-mutations.tsX';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('@/hooks/use-modal-store', () => ({
