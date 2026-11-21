@@ -5,7 +5,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
-import { CreateTaskColumnModal } from './CreateTaskColumnModal';
+import { CreateTaskColumnModal } from '../CreateTaskColumnModal';
 
 const mocks = vi.hoisted(() => ({
   isOpen: true,
