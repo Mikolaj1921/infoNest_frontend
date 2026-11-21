@@ -11,7 +11,7 @@ import {
 } from '@testing-library/react';
 import { CreateTaskModal } from '../CreateTaskModal';
 import { useModal } from '@/hooks/use-modal-store';
-import { useCreateTask } from '@/hooks/useKanbanData';
+import { useCreateTask } from '@/features/kanban/hooks/useKanbanData';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mocks = vi.hoisted(() => ({

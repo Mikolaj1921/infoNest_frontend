@@ -502,11 +502,10 @@ export const Sidebar = () => {
           } as CSSProperties
         }
         className={`
-          relative flex h-full w-64 flex-col border-r border-border bg-card/95 backdrop-blur-xl transition-transform duration-300
-          fixed inset-y-0 left-0 z-40
-          md:static md:z-auto md:h-auto md:w-[var(--sidebar-width)] md:min-w-[220px] md:max-w-[480px] md:flex-shrink-0 md:translate-x-0 md:bg-card/30
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+  fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col border-r border-border bg-card/95 backdrop-blur-xl transition-transform duration-300
+  md:relative md:inset-auto md:z-auto md:h-auto md:w-[var(--sidebar-width)] md:min-w-[220px] md:max-w-[480px] md:flex-shrink-0 md:translate-x-0 md:bg-card/30
+  ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+`}
       >
         {/* Workspace Switcher */}
         <div className="flex h-16 items-center border-b border-border/40 p-4 pl-16 md:h-auto md:pl-4">

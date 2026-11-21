@@ -16,13 +16,13 @@ import { useQuery } from '@tanstack/react-query';
 import { WorkspaceFolderItem, TaskCategory } from '@/types/kanban';
 import { useModal } from '@/hooks/use-modal-store';
 // hooks
-import { useWorkspaceKanban } from '@/hooks/useKanbanData';
+import { useWorkspaceKanban } from '@/features/kanban/hooks/useKanbanData';
 import {
   useUpdateTask,
   useDeleteTask,
   useLinkDocument,
   useUnlinkDocument,
-} from '@/hooks/useKanbanData'; // ua: хуки оновлення та видалення
+} from '@/features/kanban/hooks/useKanbanData'; // ua: хуки оновлення та видалення
 import { useParams, useRouter } from 'next/navigation';
 // icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

@@ -8,7 +8,7 @@ import {
   useWorkspaceWhiteboard,
   useUpdateWhiteboard,
   useUpdateWhiteboardSettings,
-} from '@/hooks/useWhiteboardData';
+} from '@/features/whiteboard/hooks/useWhiteboardData';
 
 import type {
   WhiteboardAppState,

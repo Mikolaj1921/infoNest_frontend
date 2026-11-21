@@ -28,7 +28,7 @@ import {
   useCreateColumn,
   useReorderTasks,
   useReorderCategories,
-} from '@/hooks/useKanbanData';
+} from '@/features/kanban/hooks/useKanbanData';
 import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
 // modals
 import { BoardColumn } from '@/features/kanban/components/BoardColumn';

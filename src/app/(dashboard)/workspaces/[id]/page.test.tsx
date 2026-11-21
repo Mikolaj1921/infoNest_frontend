@@ -18,7 +18,7 @@ import {
   useCreateColumn,
   useReorderTasks,
   useReorderCategories,
-} from '@/hooks/useKanbanData';
+} from '@/features/kanban/hooks/useKanbanData';
 import { useWorkspaceStructure } from '@/features/documents/hooks/useWorkspaceStructure';
 import type { TaskCategory } from '@/types/kanban';
 

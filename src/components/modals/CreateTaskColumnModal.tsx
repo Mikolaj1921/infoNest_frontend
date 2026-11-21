@@ -7,7 +7,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useModal } from '@/hooks/use-modal-store';
-import { useCreateColumn } from '@/hooks/useKanbanData';
+import { useCreateColumn } from '@/features/kanban/hooks/useKanbanData';
 import { useParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';

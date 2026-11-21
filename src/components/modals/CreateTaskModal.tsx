@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useModal } from '@/hooks/use-modal-store';
-import { useCreateTask } from '@/hooks/useKanbanData';
+import { useCreateTask } from '@/features/kanban/hooks/useKanbanData';
 import { useParams } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
