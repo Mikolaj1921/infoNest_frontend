@@ -1,7 +1,7 @@
 'use client';
 
 import { useModal } from '@/hooks/use-modal-store';
-import { useDeleteDocument } from '@/features/documents/hooks/use-document-mutations.tsX';
+import { useDeleteDocument } from '@/features/documents/hooks/use-document-mutations';
 
 export const DeleteDocumentConfirmModal = () => {
   const { isOpen, onClose, type, data } = useModal();

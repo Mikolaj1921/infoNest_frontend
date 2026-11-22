@@ -64,7 +64,8 @@ export default function AuthProvider({
 
   // ua: check чи авторизований юзер + перенаправка на /workspaces | /login
   useEffect(() => {
-    if (!isLoading) return;
+    // ua: чекаємо завершення перевірки авторизації
+    if (isLoading) return;
 
     // ua: список публічних сторінок авторизації
     const isAuthPage = pathname === '/login' || pathname === '/register';
@@ -73,7 +74,7 @@ export default function AuthProvider({
 
     // ua: якщо юзер авторизований і пробує зайти на /login або /register
     if (isAuthenticated && isAuthPage) {
-      router.replace('/workspaces'); // ua: перенаправка в воркспейси
+      router.replace('/workspaces');
       return;
     }
 
