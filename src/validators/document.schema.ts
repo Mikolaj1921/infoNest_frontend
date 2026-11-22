@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod';
 
 // createDocumentSchema
 export const createDocumentSchema = z.object({

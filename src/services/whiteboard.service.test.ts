@@ -1,9 +1,16 @@
-// whiteboard service - tests ai
+// ai tests - whiteboard service
 
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import api from '@/lib/axios';
 import { whiteboardService } from './whiteboard.service';
-import type { Whiteboard } from '@/types/whiteboard';
+
+import type {
+  Whiteboard,
+  WorkspaceWhiteboardData,
+  UpdateWhiteboardPayload,
+  UpdateWhiteboardSettingsPayload,
+} from '@/types/whiteboard';
 
 vi.mock('@/lib/axios', () => ({
   default: {
@@ -12,118 +19,257 @@ vi.mock('@/lib/axios', () => ({
   },
 }));
 
+// ua: тестові дані інтерактивної дошки
 const mockWhiteboard = {
-  id: 'board_123',
-  workspaceId: 'ws_123',
+  id: 'whiteboard-1',
+  workspaceId: 'workspace-1',
   elements: [],
-  settings: { theme: 'dark' },
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-02T00:00:00.000Z',
+  appState: {
+    theme: 'light',
+  },
 } as unknown as Whiteboard;
+
+// ua: тестові дані дошки воркспейсу
+const mockWorkspaceWhiteboard = {
+  whiteboard: mockWhiteboard,
+} as unknown as WorkspaceWhiteboardData;
 
 describe('whiteboardService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  test('1. Отримує дошку та роль користувача', async () => {
-    const response = {
-      success: true,
-      data: {
-        whiteboard: mockWhiteboard,
-        role: 'Editor',
-      },
-    };
+  // ==========================================
+  // getWorkspaceWhiteboard
+  // ==========================================
 
-    vi.mocked(api.get).mockResolvedValue({ data: response });
+  describe('getWorkspaceWhiteboard', () => {
+    it('повинен повертати дані дошки воркспейсу', async () => {
+      vi.mocked(api.get).mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: mockWorkspaceWhiteboard,
+        },
+      } as never);
 
-    const result = await whiteboardService.getWorkspaceWhiteboard('ws_123');
+      const result =
+        await whiteboardService.getWorkspaceWhiteboard('workspace-1');
 
-    expect(api.get).toHaveBeenCalledWith('/whiteboards/workspace/ws_123');
-    expect(result).toEqual(response.data);
-  });
+      expect(api.get).toHaveBeenCalledWith(
+        '/whiteboards/workspace/workspace-1',
+      );
 
-  test('2. Повертає null, якщо API повідомляє success: false', async () => {
-    vi.mocked(api.get).mockResolvedValue({
-      data: { success: false, data: null },
+      expect(result).toEqual(mockWorkspaceWhiteboard);
     });
 
-    const result = await whiteboardService.getWorkspaceWhiteboard('ws_123');
+    it('повинен повертати null, якщо success === false', async () => {
+      vi.mocked(api.get).mockResolvedValueOnce({
+        data: {
+          success: false,
+          data: mockWorkspaceWhiteboard,
+        },
+      } as never);
 
-    expect(result).toBeNull();
-  });
+      const result =
+        await whiteboardService.getWorkspaceWhiteboard('workspace-1');
 
-  test('3. Надсилає PATCH із елементами дошки', async () => {
-    const payload = { elements: [] };
-
-    vi.mocked(api.patch).mockResolvedValue({
-      data: { success: true, data: { whiteboard: mockWhiteboard } },
+      expect(result).toBeNull();
     });
 
-    const result = await whiteboardService.updateWhiteboard(
-      'board_123',
-      'ws_123',
-      payload,
-    );
+    it('повинен повертати null, якщо відповідь не містить success', async () => {
+      vi.mocked(api.get).mockResolvedValueOnce({
+        data: {},
+      } as never);
 
-    expect(api.patch).toHaveBeenCalledWith(
-      '/whiteboards/board_123?workspaceId=ws_123',
-      payload,
-    );
-    expect(result).toEqual(mockWhiteboard);
-  });
+      const result =
+        await whiteboardService.getWorkspaceWhiteboard('workspace-1');
 
-  test('4. Кодує workspaceId у URL запиту на збереження елементів', async () => {
-    vi.mocked(api.patch).mockResolvedValue({
-      data: { success: true, data: { whiteboard: mockWhiteboard } },
+      expect(result).toBeNull();
     });
 
-    await whiteboardService.updateWhiteboard('board_123', 'workspace & team', {
-      elements: [],
+    it('повинен повертати null, якщо data відсутня при успішній відповіді', async () => {
+      vi.mocked(api.get).mockResolvedValueOnce({
+        data: {
+          success: true,
+        },
+      } as never);
+
+      const result =
+        await whiteboardService.getWorkspaceWhiteboard('workspace-1');
+
+      expect(result).toBeUndefined();
     });
 
-    expect(api.patch).toHaveBeenCalledWith(
-      '/whiteboards/board_123?workspaceId=workspace%20%26%20team',
-      { elements: [] },
-    );
+    it('повинен передавати помилку при невдалому запиті', async () => {
+      const error = new Error('Failed to load whiteboard');
+
+      vi.mocked(api.get).mockRejectedValueOnce(error);
+
+      await expect(
+        whiteboardService.getWorkspaceWhiteboard('workspace-1'),
+      ).rejects.toBe(error);
+    });
   });
 
-  test('5. Надсилає PATCH із налаштуваннями дошки', async () => {
-    const payload = { settings: { theme: 'dark' as const } };
+  // ==========================================
+  // updateWhiteboard
+  // ==========================================
 
-    vi.mocked(api.patch).mockResolvedValue({
-      data: { success: true, data: { whiteboard: mockWhiteboard } },
+  describe('updateWhiteboard', () => {
+    it('повинен зберігати елементи дошки та повертати оновлену дошку', async () => {
+      const payload = {
+        elements: [
+          {
+            id: 'element-1',
+            type: 'rectangle',
+            x: 100,
+            y: 100,
+          },
+        ],
+      } as unknown as UpdateWhiteboardPayload;
+
+      vi.mocked(api.patch).mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            whiteboard: mockWhiteboard,
+          },
+        },
+      } as never);
+
+      const result = await whiteboardService.updateWhiteboard(
+        'whiteboard-1',
+        'workspace-1',
+        payload,
+      );
+
+      expect(api.patch).toHaveBeenCalledWith(
+        '/whiteboards/whiteboard-1?workspaceId=workspace-1',
+        payload,
+      );
+
+      expect(result).toEqual(mockWhiteboard);
     });
 
-    const result = await whiteboardService.updateWhiteboardSettings(
-      'board_123',
-      'ws_123',
-      payload,
-    );
+    it('повинен kodować workspaceId у URL', async () => {
+      vi.mocked(api.patch).mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            whiteboard: mockWhiteboard,
+          },
+        },
+      } as never);
 
-    expect(api.patch).toHaveBeenCalledWith(
-      '/whiteboards/board_123/settings?workspaceId=ws_123',
-      payload,
-    );
-    expect(result).toEqual(mockWhiteboard);
+      await whiteboardService.updateWhiteboard(
+        'whiteboard-1',
+        'workspace id&test',
+        {} as UpdateWhiteboardPayload,
+      );
+
+      expect(api.patch).toHaveBeenCalledWith(
+        '/whiteboards/whiteboard-1?workspaceId=workspace%20id%26test',
+        {},
+      );
+    });
+
+    it('повинен передавати помилку при невдалому збереженні дошки', async () => {
+      const error = new Error('Whiteboard update failed');
+
+      vi.mocked(api.patch).mockRejectedValueOnce(error);
+
+      await expect(
+        whiteboardService.updateWhiteboard(
+          'whiteboard-1',
+          'workspace-1',
+          {} as UpdateWhiteboardPayload,
+        ),
+      ).rejects.toBe(error);
+    });
   });
 
-  test('6. Передає помилку GET запиту виклику', async () => {
-    const error = new Error('Network error');
-    vi.mocked(api.get).mockRejectedValue(error);
+  // ==========================================
+  // updateWhiteboardSettings
+  // ==========================================
 
-    await expect(
-      whiteboardService.getWorkspaceWhiteboard('ws_123'),
-    ).rejects.toThrow('Network error');
-  });
+  describe('updateWhiteboardSettings', () => {
+    it('повинен зберігати налаштування дошки та повертати її', async () => {
+      const payload = {
+        appState: {
+          theme: 'dark',
+        },
+      } as unknown as UpdateWhiteboardSettingsPayload;
 
-  test('7. Передає помилку PATCH запиту виклику', async () => {
-    vi.mocked(api.patch).mockRejectedValue(new Error('Save failed'));
+      const updatedWhiteboard = {
+        ...mockWhiteboard,
+        appState: {
+          theme: 'dark',
+        },
+      } as unknown as Whiteboard;
 
-    await expect(
-      whiteboardService.updateWhiteboard('board_123', 'ws_123', {
-        elements: [],
-      }),
-    ).rejects.toThrow('Save failed');
+      vi.mocked(api.patch).mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            whiteboard: updatedWhiteboard,
+          },
+        },
+      } as never);
+
+      const result = await whiteboardService.updateWhiteboardSettings(
+        'whiteboard-1',
+        'workspace-1',
+        payload,
+      );
+
+      expect(api.patch).toHaveBeenCalledWith(
+        '/whiteboards/whiteboard-1/settings?workspaceId=workspace-1',
+        payload,
+      );
+
+      expect(result).toEqual(updatedWhiteboard);
+    });
+
+    it('повинен kodować workspaceId у URL', async () => {
+      const payload = {
+        appState: {
+          theme: 'dark',
+        },
+      } as unknown as UpdateWhiteboardSettingsPayload;
+
+      vi.mocked(api.patch).mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            whiteboard: mockWhiteboard,
+          },
+        },
+      } as never);
+
+      await whiteboardService.updateWhiteboardSettings(
+        'whiteboard-1',
+        'workspace id&test',
+        payload,
+      );
+
+      expect(api.patch).toHaveBeenCalledWith(
+        '/whiteboards/whiteboard-1/settings?workspaceId=workspace%20id%26test',
+        payload,
+      );
+    });
+
+    it('повинен передавати помилку при невдалому збереженні налаштувань', async () => {
+      const error = new Error('Whiteboard settings update failed');
+
+      vi.mocked(api.patch).mockRejectedValueOnce(error);
+
+      await expect(
+        whiteboardService.updateWhiteboardSettings(
+          'whiteboard-1',
+          'workspace-1',
+          {} as UpdateWhiteboardSettingsPayload,
+        ),
+      ).rejects.toBe(error);
+    });
   });
 });

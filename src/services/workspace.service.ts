@@ -11,7 +11,7 @@ import {
 import {
   isValidSingleWorkspaceResponse,
   isValidWorkspacesResponse,
-} from '@/utils/workspace-validators';
+} from '@/validators/workspace-validators';
 
 // dto для створення воркспейсу (вхідні дані беку)
 export interface CreateWorkspaceDTO {

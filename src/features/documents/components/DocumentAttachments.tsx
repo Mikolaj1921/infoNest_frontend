@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useDocumentFiles } from '../hooks/useDocumentFiles';
 import { formatBytes } from '@/utils/file-format';
-import { validateUploadedFile } from '@/utils/file-validator';
+import { validateUploadedFile } from '@/validators/file-validator';
 import { UploadProgress } from './UploadProgress';
 import { DocumentPreviewModal } from './DocumentPreviewModal';
 import { formatDistanceToNow } from 'date-fns';

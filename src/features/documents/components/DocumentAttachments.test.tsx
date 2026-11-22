@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DocumentAttachments } from './DocumentAttachments';
 import { useDocumentFiles } from '../hooks/useDocumentFiles';
 import { fileService } from '@/services/file.service';
-import { validateUploadedFile } from '@/utils/file-validator';
+import { validateUploadedFile } from '@/validators/file-validator';
 import { toast } from 'sonner';
 
 import type { FileAttachment } from '@/types/document';
