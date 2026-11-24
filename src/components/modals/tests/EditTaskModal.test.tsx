@@ -11,8 +11,16 @@ vi.mock('@/hooks/use-modal-store', () => ({
   useModal: vi.fn(),
 }));
 
+const mockRouter = {
+  push: vi.fn(),
+  replace: vi.fn(),
+  refresh: vi.fn(),
+  back: vi.fn(),
+};
+
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: 'ws-123' }),
+  useRouter: () => mockRouter,
 }));
 
 vi.mock('@/hooks/useKanbanData', () => ({

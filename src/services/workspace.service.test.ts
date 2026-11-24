@@ -28,7 +28,7 @@ vi.mock('@/lib/axios', () => ({
 }));
 
 // ua: мок runtime-валідаторів для ізольованого тестування сервісу
-vi.mock('@/utils/workspace-validators', () => ({
+vi.mock('@/validators/workspace-validators', () => ({
   isValidSingleWorkspaceResponse: vi.fn(),
   isValidWorkspacesResponse: vi.fn(),
 }));

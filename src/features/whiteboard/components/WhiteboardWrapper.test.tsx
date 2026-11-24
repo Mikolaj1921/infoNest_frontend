@@ -119,12 +119,13 @@ describe('WhiteboardWrapper', () => {
     expect(mockController.retryLoading).toHaveBeenCalledTimes(1);
   });
 
-  test('5. Відображає заголовок, Canvas і ID дошки після завантаження', () => {
+  test('5. Відображає заголовок і Canvas після завантаження', () => {
     render(<WhiteboardWrapper workspaceId="ws_123" />);
 
-    expect(screen.getByText('Workspace Whiteboard')).toBeTruthy();
     expect(screen.getByTestId('mock-whiteboard-canvas')).toBeTruthy();
-    expect(screen.getByText('Board ID: board_123')).toBeTruthy();
+    expect(
+      screen.getByText('Changes are saved automatically after 2 seconds.'),
+    ).toBeTruthy();
   });
 
   test('6. Відображає кнопку перемикання режиму для Owner', () => {

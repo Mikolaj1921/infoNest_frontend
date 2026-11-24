@@ -27,7 +27,7 @@ vi.mock('@/services/file.service', () => ({
 }));
 
 // ua: мок валідації завантажуваних файлів
-vi.mock('@/utils/file-validator', () => ({
+vi.mock('@/validators/file-validator', () => ({
   validateUploadedFile: vi.fn(),
 }));
 

@@ -39,7 +39,7 @@ vi.mock('@/features/workspaces/hooks/useWorkspaces', () => ({
 }));
 
 // ua: мок структури воркспейсу
-vi.mock('@/features/documents/hooks/useWorkspaceStructure', () => ({
+vi.mock('@/features/workspaces/hooks/useWorkspaceStructure', () => ({
   useWorkspaceStructure: mocks.useWorkspaceStructure,
 }));
 

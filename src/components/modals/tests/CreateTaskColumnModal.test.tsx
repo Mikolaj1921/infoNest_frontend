@@ -25,7 +25,7 @@ vi.mock('@/hooks/use-modal-store', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useKanbanData', () => ({
+vi.mock('@/features/kanban/hooks/useKanbanData', () => ({
   useCreateColumn: () => ({
     isPending: mocks.isPending,
     mutate: mocks.mutate,

@@ -15,7 +15,7 @@ import { WorkspacesSkeleton } from '@/features/workspaces/components/WorkspacesS
 import { WorkspacesEmptyState } from '@/features/workspaces/components/WorkspacesEmptyState';
 
 // modal для створення нового воркспейсу
-import { CreateWorkspaceModal } from '@/components/modals/CreateWorkspaceModal';
+import { CreateWorkspaceModal } from '@/features/workspaces/components/CreateWorkspaceModal';
 
 export default function WorkspacesPage() {
   // ua: отримання даних воркспейсів та стани завантаження/помилок через кастом-хук

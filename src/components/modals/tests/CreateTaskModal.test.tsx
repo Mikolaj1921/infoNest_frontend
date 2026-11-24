@@ -27,7 +27,7 @@ vi.mock('@/hooks/use-modal-store', () => ({
   useModal: vi.fn(),
 }));
 
-vi.mock('@/hooks/useKanbanData', () => ({
+vi.mock('@/features/kanban/hooks/useKanbanData', () => ({
   useCreateTask: vi.fn(),
 }));
 

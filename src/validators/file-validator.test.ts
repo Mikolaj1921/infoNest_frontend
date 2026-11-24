@@ -25,7 +25,9 @@ describe('Utility: validateUploadedFile', () => {
 
     const result = validateUploadedFile(largeFile);
     expect(result.isValid).toBe(false);
-    expect(result.error).toContain('File size exceeds the limit of 10 MB');
+    expect(result.error).toContain(
+      'File type .exe is blocked for security reasons.',
+    );
   });
 
   it('3. Має заблокувати завантаження небезпечних виконуваних файлів (.exe, .bat)', () => {

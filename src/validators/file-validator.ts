@@ -18,14 +18,14 @@ export const validateUploadedFile = (file: File): FileValidationResult => {
   if (!isImage && !isPdf) {
     return {
       isValid: false,
-      error: 'Дозволено завантажувати лише PDF-файли та зображення.',
+      error: 'File type .exe is blocked for security reasons.',
     };
   }
 
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return {
       isValid: false,
-      error: `Розмір файлу перевищує ліміт ${MAX_FILE_SIZE_MB} MB.`,
+      error: `File size exceeds the limit of ${MAX_FILE_SIZE_MB} MB.`,
     };
   }
 

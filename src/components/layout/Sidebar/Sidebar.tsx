@@ -16,7 +16,7 @@ import { useWorkspaces } from '@/features/workspaces/hooks/useWorkspaces';
 // ua: UI components
 import { useModal } from '@/hooks/use-modal-store';
 
-import { CreateWorkspaceModal } from '@/components/modals/CreateWorkspaceModal';
+import { CreateWorkspaceModal } from '@/features/workspaces/components/CreateWorkspaceModal';
 
 // ua: custom hook для отримання структури воркспейсу (кат + док)
 import { useWorkspaceStructure } from '@/features/workspaces/hooks/useWorkspaceStructure';

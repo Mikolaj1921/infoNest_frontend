@@ -66,15 +66,14 @@ vi.mock('@/hooks/use-modal-store', () => ({
 }));
 
 // ua: Мокаємо хуки Kanban
-vi.mock('@/hooks/useKanbanData', () => ({
+vi.mock('@/features/kanban/hooks/useKanbanData', () => ({
   useWorkspaceKanban: vi.fn(),
   useCreateColumn: vi.fn(),
   useReorderTasks: vi.fn(),
   useReorderCategories: vi.fn(),
 }));
-
 // ua: Мокаємо отримання структури документів
-vi.mock('@/features/documents/hooks/useWorkspaceStructure', () => ({
+vi.mock('@/features/workspaces/hooks/useWorkspaceStructure', () => ({
   useWorkspaceStructure: vi.fn(),
 }));
 

@@ -2,6 +2,9 @@
 
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
+
 import { useWhiteboardController } from './useWhiteboardController';
 import type {
   Whiteboard,
@@ -24,7 +27,7 @@ const mocks = vi.hoisted(() => ({
   isError: false,
 }));
 
-vi.mock('@/hooks/useWhiteboardData', () => ({
+vi.mock('@/features/whiteboard/hooks/useWhiteboardData', () => ({
   useWorkspaceWhiteboard: () => ({
     data: mocks.queryData,
     isLoading: mocks.isLoading,
@@ -45,6 +48,28 @@ vi.mock('@/hooks/useWhiteboardData', () => ({
 vi.mock('@/hooks/useDebounce', () => ({
   useDebounce: (value: unknown) => value,
 }));
+
+// ua: створюємо окремий QueryClient для кожного тесту
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+  const Wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  Wrapper.displayName = 'QueryClientTestWrapper';
+
+  return Wrapper;
+};
 
 const initialElements = [
   { id: 'element_1', type: 'rectangle' },
@@ -78,7 +103,9 @@ describe('useWhiteboardController', () => {
   });
 
   test('1. Повертає дані дошки та роль користувача', () => {
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.whiteboard).toEqual(board);
     expect(result.current.role).toBe('Owner');
@@ -91,7 +118,9 @@ describe('useWhiteboardController', () => {
     (role) => {
       mocks.queryData = createWorkspaceData(role);
 
-      const { result } = renderHook(() => useWhiteboardController('ws_123'));
+      const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+        wrapper: createWrapper(),
+      });
 
       expect(result.current.canEdit).toBe(true);
       expect(result.current.isReadOnly).toBe(false);
@@ -103,7 +132,9 @@ describe('useWhiteboardController', () => {
     (role) => {
       mocks.queryData = createWorkspaceData(role);
 
-      const { result } = renderHook(() => useWhiteboardController('ws_123'));
+      const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+        wrapper: createWrapper(),
+      });
 
       expect(result.current.canEdit).toBe(false);
       expect(result.current.isReadOnly).toBe(true);
@@ -113,8 +144,9 @@ describe('useWhiteboardController', () => {
   test('4. Відображає loading та error стани запиту', () => {
     mocks.isLoading = true;
 
-    const { result, rerender } = renderHook(() =>
-      useWhiteboardController('ws_123'),
+    const { result, rerender } = renderHook(
+      () => useWhiteboardController('ws_123'),
+      { wrapper: createWrapper() },
     );
 
     expect(result.current.isLoading).toBe(true);
@@ -128,7 +160,9 @@ describe('useWhiteboardController', () => {
   });
 
   test('5. Викликає повторне завантаження дошки', () => {
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.retryLoading();
@@ -138,7 +172,9 @@ describe('useWhiteboardController', () => {
   });
 
   test('6. Дозволяє ввімкнути read-only для користувача з правом редагування', () => {
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.setIsReadOnly(true);
@@ -149,7 +185,9 @@ describe('useWhiteboardController', () => {
   });
 
   test('7. Дозволяє повернутися до режиму редагування', () => {
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.setIsReadOnly(true);
@@ -165,7 +203,9 @@ describe('useWhiteboardController', () => {
   test('8. Не дозволяє Viewer вимкнути read-only', () => {
     mocks.queryData = createWorkspaceData('Viewer');
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.setIsReadOnly(false);
@@ -177,7 +217,9 @@ describe('useWhiteboardController', () => {
   test('9. Не змінює чернетку через handleChange для Viewer', () => {
     mocks.queryData = createWorkspaceData('Viewer');
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleChange(
@@ -191,7 +233,9 @@ describe('useWhiteboardController', () => {
   });
 
   test('10. Оновлює локальні елементи після handleChange', () => {
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     const nextElements = [
       { id: 'element_2', type: 'ellipse' },
@@ -218,7 +262,9 @@ describe('useWhiteboardController', () => {
       role: 'Owner',
     } satisfies WorkspaceWhiteboardData;
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleChange(
@@ -231,7 +277,9 @@ describe('useWhiteboardController', () => {
   });
 
   test('12. Оновлює локальну тему через handleThemeChange', () => {
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleThemeChange('dark');
@@ -243,7 +291,9 @@ describe('useWhiteboardController', () => {
   test('13. Не дозволяє Viewer змінювати тему', () => {
     mocks.queryData = createWorkspaceData('Viewer');
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleThemeChange('dark');
@@ -258,7 +308,9 @@ describe('useWhiteboardController', () => {
       { id: 'element_2', type: 'rectangle' },
     ] as unknown as WhiteboardElements;
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleChange(nextElements, { theme: 'light' });
@@ -279,7 +331,9 @@ describe('useWhiteboardController', () => {
   });
 
   test('15. Передає змінені налаштування в мутацію збереження', async () => {
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleThemeChange('dark');
@@ -302,7 +356,9 @@ describe('useWhiteboardController', () => {
   test('16. Оновлює статус після успішного збереження', async () => {
     const nextElements = [{ id: 'element_2' }] as unknown as WhiteboardElements;
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleChange(nextElements, { theme: 'light' });
@@ -326,7 +382,9 @@ describe('useWhiteboardController', () => {
   test('17. Встановлює статус error після помилки збереження', async () => {
     const nextElements = [{ id: 'element_2' }] as unknown as WhiteboardElements;
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleChange(nextElements, { theme: 'light' });
@@ -350,7 +408,9 @@ describe('useWhiteboardController', () => {
   test('18. Показує статус saving, поки мутація виконується', () => {
     mocks.elementsPending = true;
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.saveStatus).toBe('saving');
   });
@@ -358,7 +418,9 @@ describe('useWhiteboardController', () => {
   test('19. Показує статус saving, поки зберігаються налаштування', () => {
     mocks.settingsPending = true;
 
-    const { result } = renderHook(() => useWhiteboardController('ws_123'));
+    const { result } = renderHook(() => useWhiteboardController('ws_123'), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.saveStatus).toBe('saving');
   });
