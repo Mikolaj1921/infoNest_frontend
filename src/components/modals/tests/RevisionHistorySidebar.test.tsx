@@ -9,7 +9,7 @@ import {
   waitFor,
   cleanup,
 } from '@testing-library/react';
-import { RevisionHistorySidebar } from './RevisionHistorySidebar';
+import { RevisionHistorySidebar } from '../RevisionHistorySidebar';
 import type { DocumentRevision } from '@/types/document';
 
 const mocks = vi.hoisted(() => ({

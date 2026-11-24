@@ -3,7 +3,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { DeleteCategoryConfirmModal } from './DeleteCategoryConfirmModal';
+import { DeleteCategoryConfirmModal } from '../DeleteCategoryConfirmModal';
 import { useModal } from '@/hooks/use-modal-store';
 import { useDeleteCategory } from '@/features/documents/hooks/use-category-mutations';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

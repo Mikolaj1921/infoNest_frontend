@@ -2,7 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { CreateFolderModal } from './CreateFolderModal';
+import { CreateFolderModal } from '../CreateFolderModal';
 import { useModal } from '@/hooks/use-modal-store';
 import { useCreateCategory } from '@/features/documents/hooks/use-category-mutations';
 import React from 'react';

@@ -3,7 +3,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { DeleteTaskConfirmationModal } from './DeleteTaskConfirmationModal';
+import { DeleteTaskConfirmationModal } from '../DeleteTaskConfirmationModal';
 import { useModal } from '@/hooks/use-modal-store';
 
 vi.mock('@/hooks/use-modal-store', () => ({

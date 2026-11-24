@@ -7,7 +7,7 @@ import {
   waitFor,
   cleanup,
 } from '@testing-library/react';
-import { EditCategoryModal } from './EditCategoryModal';
+import { EditCategoryModal } from '../EditCategoryModal';
 
 const mocks = vi.hoisted(() => ({
   onClose: vi.fn(),

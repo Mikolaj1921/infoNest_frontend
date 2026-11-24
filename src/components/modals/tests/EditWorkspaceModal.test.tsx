@@ -9,7 +9,7 @@ import {
   waitFor,
   cleanup,
 } from '@testing-library/react';
-import { EditWorkspaceModal } from './EditWorkspaceModal';
+import { EditWorkspaceModal } from '../EditWorkspaceModal';
 
 const mocks = vi.hoisted(() => ({
   onClose: vi.fn(),

@@ -3,7 +3,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { EditTaskModal } from './EditTaskModal';
+import { EditTaskModal } from '../EditTaskModal';
 import { useModal } from '@/hooks/use-modal-store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
